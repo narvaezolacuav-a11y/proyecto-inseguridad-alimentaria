@@ -1,37 +1,148 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
-html, body, [class*="css"]{font-family:'Manrope',sans-serif;}
-.stApp{background:#F7FAF6;}
-.block-container{max-width:100%;padding:1.3rem 2rem 1rem 2rem;}
-[data-testid="stSidebar"]{background:linear-gradient(180deg,#003B2D 0%,#00492F 60%,#00271F 100%);}
-[data-testid="stSidebar"] *{color:white!important;}
-.sidebar-title{font-size:28px;font-weight:900;line-height:1.05;margin-top:25px;margin-bottom:8px;}
-.sidebar-subtitle{color:#58D66D!important;font-size:14px;font-weight:900;letter-spacing:.8px;margin-bottom:35px;}
-.side-item-active{background:linear-gradient(90deg,#0FB344,#0C7A3D);border-radius:11px;padding:13px 17px;margin:10px 0;font-weight:800;}
-.side-item{padding:12px 17px;margin:8px 0;font-weight:700;opacity:.95;}
-.side-footer{position:fixed;bottom:25px;width:210px;font-size:12px;line-height:1.7;color:#E8FFF0!important;opacity:.9;}
-.main-title-small{color:#0A1628;font-size:30px;font-weight:900;line-height:1;margin-bottom:0;}
-.main-title-big{color:#087A35;font-size:43px;font-weight:900;line-height:1.05;margin-top:-2px;margin-bottom:4px;}
-.location{color:#566173;font-size:18px;font-weight:500;}
-.control-panel,.result-card,.table-card{background:white;border:1px solid #E2E8E4;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.06);animation:fadeUp .7s ease;}
-.control-panel{padding:18px;margin-top:22px;}
-.result-card{padding:23px;min-height:238px;margin-top:18px;}
-.table-card{padding:22px;margin-top:18px;}
-.label{font-size:12px;font-weight:900;color:#101827;margin-bottom:7px;}
-.card-title,.table-title{font-size:18px;font-weight:900;color:#00492F;margin-bottom:18px;}
-.year-badge{background:#006137;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px;}
-.prediction-box{border:1px solid #A9D9B5;background:linear-gradient(180deg,#F2FFF4,#E9F9EB);border-radius:10px;padding:22px;text-align:center;}
-.pred-district{font-size:31px;font-weight:900;color:#00492F;text-transform:uppercase;margin-bottom:6px;}
-.pred-label{color:#263241;font-size:14px;font-weight:600;}
-.pred-value{font-size:43px;font-weight:900;color:#008231;line-height:1;margin-top:8px;}
-.risk-box{border-radius:10px;padding:25px 15px;text-align:center;min-height:115px;}
-.risk-title{font-size:15px;font-weight:900;margin-bottom:11px;}
-.risk-range{font-size:22px;font-weight:600;color:#101827;}
-.badge{display:inline-block;border-radius:6px;padding:4px 12px;color:white;font-weight:800;font-size:12px;min-width:70px;text-align:center;}
-.explanation{background:#F2FFF4;border-left:6px solid #087A35;border-radius:12px;padding:16px 18px;margin-top:18px;color:#142033;font-weight:500;line-height:1.6;}
-div.stButton>button{background:linear-gradient(90deg,#00492F,#006137);color:white;border:none;border-radius:10px;height:50px;font-weight:900;width:100%;transition:.2s ease;}
-div.stButton>button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,73,47,.25);}
-.stDownloadButton button{border-radius:10px!important;height:48px!important;font-weight:900!important;}
-.footer{background:#00552F;color:white;text-align:center;padding:13px;margin-top:20px;font-size:15px;font-weight:600;}
-table{width:100%;border-collapse:collapse;font-size:14px;} th{background:#E7F5E7;color:#0B3D2E;text-align:left;padding:10px;border:1px solid #DCE8DF;} td{padding:9px;border:1px solid #E5E7EB;color:#142033;} tr:nth-child(even){background:#FAFCFA;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* Configuración General con Tipografía Limpia */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background-color: #F8FAFC; /* Gris ultra claro profesional */
+}
+
+.block-container {
+    max-width: 100%;
+    padding: 2rem 3rem 2rem 3rem;
+}
+
+/* Barra Lateral - Azul Ejecutivo Profundo */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+    box-shadow: 4px 0px 15px rgba(0, 0, 0, 0.05);
+}
+
+[data-testid="stSidebar"] * {
+    color: #F8FAFC !important;
+}
+
+.sidebar-title {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-top: 20px;
+    margin-bottom: 6px;
+    color: #38BDF8 !important; /* Azul cielo acento */
+}
+
+.sidebar-subtitle {
+    color: #94A3B8 !important;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: .5px;
+    margin-bottom: 30px;
+}
+
+/* Contenedores de Tarjetas (Cards) */
+.metric-card, .table-card, .pred-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    margin-bottom: 20px;
+}
+
+/* Títulos de Secciones */
+.main-title {
+    color: #0F172A;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.main-subtitle {
+    color: #64748B;
+    font-size: 16px;
+    margin-bottom: 32px;
+}
+
+.table-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Bloque Destacado de Predicción */
+.pred-card {
+    background: linear-gradient(135deg, #1E3A8A 0%, #0F172A 100%);
+    color: white !important;
+    border: none;
+    text-align: center;
+    padding: 35px;
+}
+
+.pred-card h2 {
+    color: #38BDF8 !important;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.pred-card h3 {
+    color: #FFFFFF !important;
+    font-size: 36px;
+    font-weight: 800;
+    margin: 15px 0;
+}
+
+.pred-value {
+    font-size: 48px;
+    font-weight: 900;
+    color: #38BDF8;
+}
+
+/* Badges de Riesgo Refinados */
+.badge {
+    display: inline-block;
+    border-radius: 9999px;
+    padding: 4px 14px;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Cuadro de Interpretación */
+.explanation {
+    background: #F1F5F9;
+    border-left: 5px solid #3B82F6;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 20px;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* Botones Estilizados en Azul */
+div.stButton > button, .stDownloadButton button {
+    background: #2563EB !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    height: 44px;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+div.stButton > button:hover, .stDownloadButton button:hover {
+    background: #1D4ED8 !important;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
