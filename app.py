@@ -1,142 +1,28 @@
 
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
+from io import BytesIO
+from pathlib import Path
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score, accuracy_score
 
-st.set_page_config(
-    page_title="Inseguridad Alimentaria",
-    page_icon="🍽️",
-    layout="wide"
-)
+st.set_page_config(page_title="Inseguridad Alimentaria", page_icon="🍽️", layout="wide")
 
-# =========================
-# ESTILOS Y ANIMACIONES
-# =========================
+css = Path("assets/style.css")
+if css.exists():
+    st.markdown(f"<style>{css.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(135deg, #F8FFF4 0%, #E9F7EF 40%, #FFF8E7 100%);
-}
-
-.main-title {
-    font-size: 42px;
-    font-weight: 800;
-    color: #1B5E20;
-    text-align: center;
-    padding: 18px;
-    animation: fadeInDown 1s ease-in-out;
-}
-
-.sub-title {
-    text-align: center;
-    color: #4E5D4E;
-    font-size: 18px;
-    margin-bottom: 25px;
-    animation: fadeIn 1.5s ease-in-out;
-}
-
-.card {
-    background: white;
-    padding: 22px;
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    border-left: 7px solid #43A047;
-    animation: fadeInUp 0.8s ease-in-out;
-}
-
-.result-card {
-    background: linear-gradient(135deg, #2E7D32, #66BB6A);
-    color: white;
-    padding: 26px;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-    animation: pulseSoft 2s infinite;
-}
-
-.result-card h2 {
-    color: white;
-    font-size: 28px;
-}
-
-.result-card h3 {
-    color: white;
-    font-size: 38px;
-}
-
-.info-box {
-    background: #FFFDE7;
-    border-left: 6px solid #FBC02D;
-    padding: 18px;
-    border-radius: 12px;
-    color: #4E342E;
-    animation: fadeIn 1.2s ease-in-out;
-}
-
-.section-title {
-    color: #1B5E20;
-    font-weight: 800;
-    font-size: 26px;
-    margin-top: 22px;
-    margin-bottom: 12px;
-}
-
-[data-testid="stMetricValue"] {
-    color: #1B5E20;
-    font-weight: 800;
-}
-
-div.stButton > button {
-    background: linear-gradient(90deg, #43A047, #FBC02D);
-    color: white;
-    border: none;
-    border-radius: 15px;
-    padding: 12px 25px;
-    font-weight: 700;
-    transition: 0.3s;
-}
-
-div.stButton > button:hover {
-    transform: scale(1.04);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-}
-
-@keyframes fadeInDown {
-    from {opacity: 0; transform: translateY(-25px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-@keyframes fadeInUp {
-    from {opacity: 0; transform: translateY(25px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-@keyframes pulseSoft {
-    0% {transform: scale(1);}
-    50% {transform: scale(1.015);}
-    100% {transform: scale(1);}
-}
-</style>
+<div class="hero">
+  <img class="logo" src="assets/logo.svg" width="95">
+  <h1>🍽️ Predicción de Inseguridad Alimentaria</h1>
+  <p>Modelo predictivo y clasificación de riesgo por distrito en Lima Metropolitana</p>
+</div>
 """, unsafe_allow_html=True)
-
-st.markdown('<div class="main-title">🍽️ Sistema Predictivo de Inseguridad Alimentaria</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Predicción y clasificación de riesgo alimentario en distritos de Lima Metropolitana</div>', unsafe_allow_html=True)
-
-
-# =========================
-# CARGA DE DATOS
-# =========================
 
 @st.cache_data
 def cargar_datos():
@@ -144,214 +30,194 @@ def cargar_datos():
 
 df = cargar_datos()
 
-
-# =========================
-# ENTRENAMIENTO
-# =========================
-
 @st.cache_resource
-def entrenar_modelos(df):
-    df_model = df.copy()
-
+def entrenar(df):
+    data = df.copy()
     encoders = {}
-    columnas_cat = [
-        "Distrito", "Zona", "Tipo_Empleo", "Nivel_Educativo",
-        "Programa_Social", "Acceso_Agua", "Acceso_Desague",
-        "Estado_Nutricional", "Nivel_Riesgo"
-    ]
-
-    for col in columnas_cat:
+    cat_cols = ["Distrito","Zona","Tipo_Empleo","Nivel_Educativo","Programa_Social","Acceso_Agua","Acceso_Desague","Estado_Nutricional","Nivel_Riesgo"]
+    for col in cat_cols:
         le = LabelEncoder()
-        df_model[col] = le.fit_transform(df_model[col].astype(str))
+        data[col] = le.fit_transform(data[col].astype(str))
         encoders[col] = le
 
-    variables = [
-        "Año",
-        "Distrito",
-        "Ingreso_Laboral",
-        "Gasto_Alimentos",
-        "Inflacion_Alimentaria",
-        "Integrantes_Hogar",
-        "Porcentaje_Gasto_Alimentos",
-        "Indice_Vulnerabilidad"
+    features = ["Año","Distrito","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad"]
+    X = data[features]
+    y_reg = data["Probabilidad_Enfermedad_Alimentaria"]
+    y_clf = data["Nivel_Riesgo"]
+
+    X_train, X_test, yr_train, yr_test = train_test_split(X, y_reg, test_size=.2, random_state=42)
+    _, _, yc_train, yc_test = train_test_split(X, y_clf, test_size=.2, random_state=42)
+
+    reg = RandomForestRegressor(n_estimators=220, random_state=42)
+    clf = RandomForestClassifier(n_estimators=220, random_state=42)
+    reg.fit(X_train, yr_train)
+    clf.fit(X_train, yc_train)
+
+    metrics = {
+        "MAE": mean_absolute_error(yr_test, reg.predict(X_test)),
+        "R2": r2_score(yr_test, reg.predict(X_test)),
+        "Accuracy": accuracy_score(yc_test, clf.predict(X_test))
+    }
+    return reg, clf, encoders, features, metrics
+
+def preparar_futuro(anio, df, reg, clf, encoders, features):
+    base = df.groupby("Distrito").agg({
+        "Ingreso_Laboral":"mean",
+        "Gasto_Alimentos":"mean",
+        "Inflacion_Alimentaria":"mean",
+        "Integrantes_Hogar":"mean",
+        "Porcentaje_Gasto_Alimentos":"mean",
+        "Indice_Vulnerabilidad":"mean"
+    }).reset_index()
+    base["Año"] = anio
+    model = base.copy()
+    model["Distrito"] = encoders["Distrito"].transform(model["Distrito"].astype(str))
+    X_future = model[features]
+    base["Probabilidad"] = reg.predict(X_future)
+    base["Nivel_Riesgo_Code"] = clf.predict(X_future).astype(int)
+    base["Clasificación"] = encoders["Nivel_Riesgo"].inverse_transform(base["Nivel_Riesgo_Code"])
+    return base.sort_values("Probabilidad", ascending=False)
+
+def excel_bytes(tabla):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        tabla.to_excel(writer, index=False, sheet_name="Resultados")
+    return output.getvalue()
+
+def pdf_bytes(anio, tabla, top, explicacion):
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib import colors
+    output = BytesIO()
+    doc = SimpleDocTemplate(output, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = [
+        Paragraph("Reporte de Predicción de Inseguridad Alimentaria", styles["Title"]),
+        Spacer(1, 12),
+        Paragraph(f"Año seleccionado: {anio}", styles["Heading2"]),
+        Paragraph(f"Distrito con mayor probabilidad: {top['Distrito']}", styles["Normal"]),
+        Paragraph(f"Probabilidad estimada: {top['Probabilidad']:.2f}%", styles["Normal"]),
+        Paragraph(f"Clasificación: {top['Clasificación']}", styles["Normal"]),
+        Spacer(1, 12),
+        Paragraph("Explicación automática", styles["Heading2"]),
+        Paragraph(explicacion, styles["Normal"]),
+        Spacer(1, 12)
     ]
+    resumen = tabla[["Distrito","Probabilidad","Clasificación"]].head(10).copy()
+    resumen["Probabilidad"] = resumen["Probabilidad"].round(2)
+    t = Table([resumen.columns.tolist()] + resumen.values.tolist())
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#2E7D32")),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.white),
+        ("GRID", (0,0), (-1,-1), .5, colors.grey)
+    ]))
+    story.append(t)
+    doc.build(story)
+    return output.getvalue()
 
-    X = df_model[variables]
-    y_pred = df_model["Probabilidad_Enfermedad_Alimentaria"]
-    y_class = df_model["Nivel_Riesgo"]
+if "modelo_entrenado" not in st.session_state:
+    st.session_state.modelo_entrenado = False
+if "resultados" not in st.session_state:
+    st.session_state.resultados = None
 
-    X_train, X_test, y_train_pred, y_test_pred = train_test_split(
-        X, y_pred, test_size=0.2, random_state=42
-    )
+st.sidebar.image("assets/logo.svg", width=115)
+st.sidebar.header("Panel de control")
+anio = st.sidebar.selectbox("Selector de año", list(range(2026, 2036)), index=4)
+distrito_sel = st.sidebar.selectbox("Selector de distrito", sorted(df["Distrito"].unique()))
+busqueda = st.sidebar.text_input("Barra de búsqueda de distrito", "")
 
-    _, _, y_train_class, y_test_class = train_test_split(
-        X, y_class, test_size=0.2, random_state=42
-    )
+st.markdown('<div class="section-title"> Acciones del aplicativo</div>', unsafe_allow_html=True)
+a1, a2, a3, a4, a5 = st.columns(5)
+entrenar_btn = a1.button("Entrenar modelo")
+predecir_btn = a2.button("Realizar predicción")
+clasificar_btn = a3.button("Clasificar distritos")
+pdf_btn = a4.button("Preparar PDF")
+excel_btn = a5.button("Preparar Excel")
 
-    modelo_pred = RandomForestRegressor(n_estimators=200, random_state=42)
-    modelo_class = RandomForestClassifier(n_estimators=200, random_state=42)
+if entrenar_btn or not st.session_state.modelo_entrenado:
+    with st.spinner("Entrenando modelos..."):
+        reg, clf, encoders, features, metrics = entrenar(df)
+        st.session_state.reg = reg
+        st.session_state.clf = clf
+        st.session_state.encoders = encoders
+        st.session_state.features = features
+        st.session_state.metrics = metrics
+        st.session_state.modelo_entrenado = True
+    st.success("Modelo entrenado correctamente.")
 
-    modelo_pred.fit(X_train, y_train_pred)
-    modelo_class.fit(X_train, y_train_class)
+reg = st.session_state.reg
+clf = st.session_state.clf
+encoders = st.session_state.encoders
+features = st.session_state.features
+metrics = st.session_state.metrics
 
-    pred_test = modelo_pred.predict(X_test)
-    class_test = modelo_class.predict(X_test)
+if predecir_btn or clasificar_btn or st.session_state.resultados is None:
+    st.session_state.resultados = preparar_futuro(anio, df, reg, clf, encoders, features)
 
-    mae = mean_absolute_error(y_test_pred, pred_test)
-    r2 = r2_score(y_test_pred, pred_test)
-    acc = accuracy_score(y_test_class, class_test)
+tabla = preparar_futuro(anio, df, reg, clf, encoders, features)
+top = tabla.iloc[0]
+fila_distrito = tabla[tabla["Distrito"] == distrito_sel].iloc[0]
 
-    return modelo_pred, modelo_class, encoders, variables, mae, r2, acc
+tabla_mostrar = tabla[tabla["Distrito"].str.contains(busqueda, case=False, na=False)].copy() if busqueda.strip() else tabla.copy()
 
+st.markdown('<div class="section-title"> Dashboard con indicadores</div>', unsafe_allow_html=True)
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Año", anio)
+m2.metric("Distrito más vulnerable", top["Distrito"])
+m3.metric("Probabilidad máxima", f"{top['Probabilidad']:.2f}%")
+m4.metric("Clasificación principal", top["Clasificación"])
 
-modelo_pred, modelo_class, encoders, variables, mae, r2, acc = entrenar_modelos(df)
+st.markdown('<div class="section-title"> PREDICCIÓN</div>', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="pred-card">
+  <h2>Año: {anio}</h2>
+  <p>Distrito con mayor probabilidad</p>
+  <h3>{top["Distrito"]}</h3>
+  <h2>Probabilidad: {top["Probabilidad"]:.2f}%</h2>
+</div>
+""", unsafe_allow_html=True)
 
+st.markdown('<div class="section-title"> CLASIFICACIÓN</div>', unsafe_allow_html=True)
+clasificacion = tabla[["Distrito","Clasificación","Probabilidad"]].head(12).copy()
+clasificacion["Probabilidad"] = clasificacion["Probabilidad"].round(2)
+st.dataframe(clasificacion, use_container_width=True)
 
-# =========================
-# PANEL LATERAL
-# =========================
-
-st.sidebar.title("⚙️ Panel de control")
-anio = st.sidebar.selectbox("Selecciona el año", list(range(2026, 2036)))
-st.sidebar.info("El sistema predice la probabilidad por distrito y clasifica el nivel de riesgo.")
-
-
-# =========================
-# MÉTRICAS
-# =========================
-
-st.markdown('<div class="section-title">📌 Resultados del entrenamiento</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="section-title"> Consulta por distrito seleccionado</div>', unsafe_allow_html=True)
 c1, c2, c3 = st.columns(3)
-c1.metric("Error MAE", f"{mae:.2f}")
-c2.metric("R²", f"{r2:.2f}")
-c3.metric("Accuracy", f"{acc*100:.1f}%")
+c1.metric("Distrito", distrito_sel)
+c2.metric("Probabilidad", f"{fila_distrito['Probabilidad']:.2f}%")
+c3.metric("Riesgo", fila_distrito["Clasificación"])
 
+st.markdown('<div class="section-title"> Tabla de resultados</div>', unsafe_allow_html=True)
+tabla_final = tabla_mostrar[["Distrito","Año","Ingreso_Laboral","Gasto_Alimentos","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad","Probabilidad","Clasificación"]].copy()
+for col in ["Ingreso_Laboral","Gasto_Alimentos","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad","Probabilidad"]:
+    tabla_final[col] = tabla_final[col].round(2)
+st.dataframe(tabla_final, use_container_width=True)
 
-# =========================
-# PREDICCIÓN FUTURA
-# =========================
+st.markdown('<div class="section-title"> Gráficos dinámicos</div>', unsafe_allow_html=True)
+g1, g2 = st.columns(2)
+with g1:
+    fig = px.bar(tabla.head(10), x="Distrito", y="Probabilidad", color="Clasificación", title=f"Top 10 distritos con mayor probabilidad - {anio}")
+    st.plotly_chart(fig, use_container_width=True)
+with g2:
+    fig2 = px.scatter(tabla, x="Ingreso_Laboral", y="Probabilidad", color="Clasificación", hover_name="Distrito", size="Gasto_Alimentos", title="Ingreso laboral vs probabilidad")
+    st.plotly_chart(fig2, use_container_width=True)
 
-base = (
-    df.groupby("Distrito")
-    .agg({
-        "Ingreso_Laboral": "mean",
-        "Gasto_Alimentos": "mean",
-        "Inflacion_Alimentaria": "mean",
-        "Integrantes_Hogar": "mean",
-        "Porcentaje_Gasto_Alimentos": "mean",
-        "Indice_Vulnerabilidad": "mean"
-    })
-    .reset_index()
+explicacion = (
+    f"El modelo asigna mayor probabilidad a {top['Distrito']} porque presenta un ingreso laboral "
+    f"promedio aproximado de S/ {top['Ingreso_Laboral']:.2f}, un porcentaje del ingreso destinado a alimentos "
+    f"de {top['Porcentaje_Gasto_Alimentos']:.2f} y un índice de vulnerabilidad de {top['Indice_Vulnerabilidad']:.2f}. "
+    f"Estas condiciones aumentan el riesgo de padecer enfermedades alimentarias asociadas a la inseguridad alimentaria."
 )
 
-base["Año"] = anio
-base_model = base.copy()
-base_model["Distrito_Texto"] = base_model["Distrito"]
-base_model["Distrito"] = encoders["Distrito"].transform(base_model["Distrito"].astype(str))
+st.markdown('<div class="section-title"> Explicación automática</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="info-box">{explicacion}</div>', unsafe_allow_html=True)
 
-X_futuro = base_model[variables]
+st.markdown('<div class="section-title"> Exportar resultados</div>', unsafe_allow_html=True)
+e1, e2 = st.columns(2)
+with e1:
+    st.download_button("Exportar Excel", data=excel_bytes(tabla_final), file_name=f"resultados_inseguridad_alimentaria_{anio}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+with e2:
+    st.download_button("Exportar PDF", data=pdf_bytes(anio, tabla, top, explicacion), file_name=f"reporte_inseguridad_alimentaria_{anio}.pdf", mime="application/pdf")
 
-base["Probabilidad_Predicha"] = modelo_pred.predict(X_futuro)
-base["Nivel_Riesgo_Codificado"] = modelo_class.predict(X_futuro)
-base["Nivel_Riesgo"] = encoders["Nivel_Riesgo"].inverse_transform(base["Nivel_Riesgo_Codificado"].astype(int))
-
-base = base.sort_values("Probabilidad_Predicha", ascending=False)
-top = base.iloc[0]
-
-st.markdown('<div class="section-title">🔮 Predicción principal</div>', unsafe_allow_html=True)
-
-st.markdown(f"""
-<div class="result-card">
-    <h2>Año seleccionado: {anio}</h2>
-    <p>Distrito con mayor probabilidad de padecer enfermedades alimentarias</p>
-    <h3>{top["Distrito"]}</h3>
-    <h2>{top["Probabilidad_Predicha"]:.2f}%</h2>
-    <p>Nivel de riesgo: <b>{top["Nivel_Riesgo"]}</b></p>
-</div>
-""", unsafe_allow_html=True)
-
-
-# =========================
-# TABLA
-# =========================
-
-st.markdown('<div class="section-title">📊 Clasificación de distritos</div>', unsafe_allow_html=True)
-
-tabla = base[[
-    "Distrito",
-    "Año",
-    "Ingreso_Laboral",
-    "Gasto_Alimentos",
-    "Probabilidad_Predicha",
-    "Nivel_Riesgo"
-]].copy()
-
-tabla["Ingreso_Laboral"] = tabla["Ingreso_Laboral"].round(2)
-tabla["Gasto_Alimentos"] = tabla["Gasto_Alimentos"].round(2)
-tabla["Probabilidad_Predicha"] = tabla["Probabilidad_Predicha"].round(2)
-
-st.dataframe(tabla, use_container_width=True)
-
-
-# =========================
-# GRÁFICO
-# =========================
-
-st.markdown('<div class="section-title">📈 Ranking de probabilidad</div>', unsafe_allow_html=True)
-
-top10 = tabla.head(10)
-
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.bar(top10["Distrito"], top10["Probabilidad_Predicha"])
-ax.set_title(f"Top 10 distritos con mayor probabilidad - {anio}")
-ax.set_xlabel("Distrito")
-ax.set_ylabel("Probabilidad (%)")
-ax.tick_params(axis="x", rotation=75)
-ax.grid(axis="y")
-
-st.pyplot(fig)
-
-
-# =========================
-# CONSULTA INDIVIDUAL
-# =========================
-
-st.markdown('<div class="section-title">🔎 Consulta individual</div>', unsafe_allow_html=True)
-
-distrito = st.selectbox("Selecciona un distrito", sorted(tabla["Distrito"].unique()))
-fila = tabla[tabla["Distrito"] == distrito].iloc[0]
-
-a, b, c = st.columns(3)
-a.metric("Distrito", distrito)
-b.metric("Probabilidad", f"{fila['Probabilidad_Predicha']:.2f}%")
-c.metric("Clasificación", fila["Nivel_Riesgo"])
-
-
-# =========================
-# DESCARGA
-# =========================
-
-st.markdown('<div class="section-title">⬇️ Descargar resultados</div>', unsafe_allow_html=True)
-
-csv = tabla.to_csv(index=False).encode("utf-8")
-
-st.download_button(
-    label="Descargar resultados CSV",
-    data=csv,
-    file_name=f"resultados_prediccion_{anio}.csv",
-    mime="text/csv"
-)
-
-
-# =========================
-# INTERPRETACIÓN
-# =========================
-
-st.markdown(f"""
-<div class="info-box">
-<b>Interpretación:</b><br>
-Para el año <b>{anio}</b>, el modelo identifica a <b>{top["Distrito"]}</b> como el distrito con mayor probabilidad estimada.
-Este resultado se basa en variables como ingreso laboral, gasto en alimentos, inflación alimentaria e índice de vulnerabilidad.
-</div>
-""", unsafe_allow_html=True)
