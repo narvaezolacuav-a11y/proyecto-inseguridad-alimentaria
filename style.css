@@ -1,22 +1,134 @@
+.stApp {
+    background: linear-gradient(135deg, #F3FFF5 0%, #E8F5E9 45%, #FFF8E1 100%);
+}
 
-stApp{background:linear-gradient(135deg,#F3FFF5 0%,#E8F5E9 45%,#FFF8E1 100%);}
-.block-container{padding-top:1.2rem;}
-.hero{padding:28px;border-radius:28px;text-align:center;color:white;background:linear-gradient(120deg,#1B5E20,#43A047,#FBC02D);box-shadow:0 14px 32px rgba(0,0,0,.18);animation:fadeDown .9s ease;margin-bottom:20px;}
-.hero h1{color:white;font-size:38px;margin:5px 0;font-weight:900;}
-.hero p{color:#FFFDE7;font-size:18px;margin:0;}
-.logo{animation:float 3s ease-in-out infinite;}
-.section-title{color:#1B5E20;font-size:25px;font-weight:900;margin:24px 0 12px 0;border-left:8px solid #FBC02D;padding-left:12px;animation:fadeIn .8s ease;}
-.pred-card{background:linear-gradient(135deg,#2E7D32,#66BB6A);color:white;border-radius:24px;padding:28px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.20);animation:pulse 2.6s infinite;margin:16px 0;}
-.pred-card h2,.pred-card h3,.pred-card p{color:white;}
-.pred-card h3{font-size:39px;margin:8px 0;font-weight:900;}
-.info-box{background:#FFFDE7;border-left:7px solid #FBC02D;border-radius:18px;padding:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);animation:fadeUp .9s ease;color:#3E2723;}
-[data-testid="stMetric"]{background:white;border-radius:18px;padding:14px;border-left:6px solid #43A047;box-shadow:0 8px 20px rgba(0,0,0,.10);animation:fadeUp .8s ease;}
-[data-testid="stMetricValue"]{color:#1B5E20;font-weight:900;}
-div.stButton > button,.stDownloadButton button{width:100%;border:0;border-radius:16px;padding:12px 18px;font-weight:900;color:white;background:linear-gradient(90deg,#2E7D32,#FBC02D);transition:.25s;}
-div.stButton > button:hover,.stDownloadButton button:hover{transform:scale(1.035);box-shadow:0 8px 22px rgba(0,0,0,.22);}
-@keyframes fadeDown{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.012)}100%{transform:scale(1)}}
-@keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+.block-container {
+    padding-top: 1.2rem;
+}
+
+.hero {
+    padding: 28px;
+    border-radius: 28px;
+    text-align: center;
+    color: white;
+    background: linear-gradient(120deg, #1B5E20, #43A047, #FBC02D);
+    box-shadow: 0 14px 32px rgba(0,0,0,.18);
+    animation: fadeDown .9s ease;
+    margin-bottom: 20px;
+}
+
+.hero h1 {
+    color: white;
+    font-size: 38px;
+    margin: 5px 0;
+    font-weight: 900;
+}
+
+.hero p {
+    color: #FFFDE7;
+    font-size: 18px;
+    margin: 0;
+}
+
+.logo {
+    animation: float 3s ease-in-out infinite;
+}
+
+.section-title {
+    color: #1B5E20;
+    font-size: 25px;
+    font-weight: 900;
+    margin: 24px 0 12px 0;
+    border-left: 8px solid #FBC02D;
+    padding-left: 12px;
+    animation: fadeIn .8s ease;
+}
+
+.pred-card {
+    background: linear-gradient(135deg, #2E7D32, #66BB6A);
+    color: white;
+    border-radius: 24px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,.20);
+    animation: pulse 2.6s infinite;
+    margin: 16px 0;
+}
+
+.pred-card h2, .pred-card h3, .pred-card p {
+    color: white;
+}
+
+.pred-card h3 {
+    font-size: 39px;
+    margin: 8px 0;
+    font-weight: 900;
+}
+
+.info-box {
+    background: #FFFDE7;
+    border-left: 7px solid #FBC02D;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    animation: fadeUp .9s ease;
+    color: #3E2723;
+}
+
+[data-testid="stMetric"] {
+    background: white;
+    border-radius: 18px;
+    padding: 14px;
+    border-left: 6px solid #43A047;
+    box-shadow: 0 8px 20px rgba(0,0,0,.10);
+    animation: fadeUp .8s ease;
+}
+
+[data-testid="stMetricValue"] {
+    color: #1B5E20;
+    font-weight: 900;
+}
+
+div.stButton > button, .stDownloadButton button {
+    width: 100%;
+    border: 0;
+    border-radius: 16px;
+    padding: 12px 18px;
+    font-weight: 900;
+    color: white;
+    background: linear-gradient(90deg, #2E7D32, #FBC02D);
+    transition: .25s;
+}
+
+div.stButton > button:hover, .stDownloadButton button:hover {
+    transform: scale(1.035);
+    box-shadow: 0 8px 22px rgba(0,0,0,.22);
+}
+
+@keyframes fadeDown {
+    from {opacity:0; transform:translateY(-28px);}
+    to {opacity:1; transform:translateY(0);}
+}
+
+@keyframes fadeUp {
+    from {opacity:0; transform:translateY(28px);}
+    to {opacity:1; transform:translateY(0);}
+}
+
+@keyframes fadeIn {
+    from {opacity:0;}
+    to {opacity:1;}
+}
+
+@keyframes pulse {
+    0% {transform:scale(1);}
+    50% {transform:scale(1.012);}
+    100% {transform:scale(1);}
+}
+
+@keyframes float {
+    0% {transform:translateY(0);}
+    50% {transform:translateY(-8px);}
+    100% {transform:translateY(0);}
+}
 
