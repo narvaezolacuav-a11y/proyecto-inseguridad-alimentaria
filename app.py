@@ -255,16 +255,28 @@ def load_css():
         background: #FFFFFF;
         border: 2px solid #E5E7EB;
         border-radius: 12px;
-        padding: 25px;
+        padding: 20px;
         margin: 30px 0;
         overflow-x: auto;
+        animation: slideInLeft 0.5s ease-in-out;
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
     
     .table-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 700;
         color: var(--primary-color);
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -272,26 +284,34 @@ def load_css():
     .table-card table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     
     .table-card th {
         background-color: var(--primary-color);
         color: white;
-        padding: 15px;
+        padding: 12px 10px;
         text-align: left;
         font-weight: 600;
         border: none;
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
     }
     
     .table-card td {
-        padding: 12px 15px;
+        padding: 10px 10px;
         border-bottom: 1px solid #E5E7EB;
         color: #333333;
+        font-size: 0.85rem;
+    }
+    
+    .table-card tr {
+        transition: all 0.2s ease;
     }
     
     .table-card tr:hover {
-        background-color: #F9FAFB;
+        background-color: #F0F9FF;
+        transform: scale(1.01);
     }
     
     .table-card tr:last-child td {
@@ -420,8 +440,20 @@ def load_css():
         background: #FFFFFF;
         border: 2px solid #E5E7EB;
         border-radius: 12px;
-        padding: 25px;
-        margin: 20px 0;
+        padding: 20px;
+        margin: 30px 0;
+        animation: slideInRight 0.5s ease-in-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
     
     .chart-title {
@@ -453,7 +485,7 @@ def load_css():
         .table-card th,
         .table-card td {
             padding: 8px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
     }
     </style>
@@ -670,7 +702,7 @@ def create_top10_chart(results):
     """Crea gráfica de Top 10 distritos con mayor riesgo"""
     top10 = results.nlargest(10, "IRIA")[["Distrito", "IRIA"]].reset_index(drop=True)
     
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(5.5, 4.5))
     colors_bar = ["#8B0000" if x >= 75 else "#F97316" if x >= 55 else "#EAB308" if x >= 35 else "#16A34A" 
                   for x in top10["IRIA"]]
     
@@ -678,12 +710,12 @@ def create_top10_chart(results):
     
     # Añadir valores en las barras
     for i, (bar, val) in enumerate(zip(bars, top10["IRIA"])):
-        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=8)
+        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=7)
     
-    ax.set_xlabel("Índice IRIA", fontsize=10, fontweight="bold", color="#00492F")
-    ax.set_ylabel("Distrito", fontsize=10, fontweight="bold", color="#00492F")
+    ax.set_xlabel("Índice IRIA", fontsize=9, fontweight="bold", color="#00492F")
+    ax.set_ylabel("Distrito", fontsize=9, fontweight="bold", color="#00492F")
     ax.set_title("Top 10 Distritos - Mayor Riesgo", 
-                 fontsize=11, fontweight="bold", color="#00492F", pad=15)
+                 fontsize=10, fontweight="bold", color="#00492F", pad=12)
     ax.set_xlim(0, 105)
     ax.grid(axis="x", alpha=0.3, linestyle="--")
     ax.set_facecolor("#F9FAFB")
@@ -699,25 +731,25 @@ def create_risk_distribution_chart(results):
     
     colors_list = [colors_pie.get(level, "#16A34A") for level in risk_counts.index]
     
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(5.5, 4.5))
     wedges, texts, autotexts = ax.pie(
         risk_counts.values,
         labels=risk_counts.index,
         autopct="%1.1f%%",
         colors=colors_list,
         startangle=90,
-        textprops={"fontsize": 10, "fontweight": "bold", "color": "white"},
+        textprops={"fontsize": 9, "fontweight": "bold", "color": "white"},
         explode=[0.05 if x == "Muy Alto" else 0 for x in risk_counts.index]
     )
     
     # Mejorar textos
     for text in texts:
         text.set_color("#00492F")
-        text.set_fontsize(10)
+        text.set_fontsize(9)
         text.set_fontweight("bold")
     
     ax.set_title("Distribución de Riesgos", 
-                 fontsize=11, fontweight="bold", color="#00492F", pad=15)
+                 fontsize=10, fontweight="bold", color="#00492F", pad=12)
     
     fig.patch.set_facecolor("white")
     plt.tight_layout()
@@ -751,7 +783,7 @@ c1, c2, c3, c4 = st.columns([1.05, 1.25, 1.15, 1.35])
 
 with c1:
     st.markdown('<div class="label">AÑO PARA LA PREDICCIÓN</div>', unsafe_allow_html=True)
-    year = st.selectbox("", list(range(2024, 2036)), index=6, label_visibility="collapsed")
+    year = st.selectbox("", list(range(2024, 2036)), index=6, label_visibility="collapsed", key="year_select")
 
 results = project_by_year(df, year, regressor, classifier, district_encoder, class_encoder, features)
 
@@ -760,7 +792,8 @@ with c2:
     district_selected = st.selectbox(
         "",
         ["Todos los distritos"] + sorted(results["Distrito"].unique()),
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key="district_select"
     )
 
 with c3:
@@ -768,12 +801,13 @@ with c3:
     risk_filter = st.selectbox(
         "",
         ["Todos los niveles", "Muy Alto", "Alto", "Medio", "Bajo"],
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        key="risk_select"
     )
 
 with c4:
     st.markdown('<div class="label">BUSCAR DISTRITO</div>', unsafe_allow_html=True)
-    search = st.text_input("", placeholder="Buscar distrito...", label_visibility="collapsed")
+    search = st.text_input("", placeholder="Buscar distrito...", label_visibility="collapsed", key="search_input")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -891,28 +925,31 @@ with r3:
 # 📊 TABLE Y GRÁFICAS LADO A LADO
 st.markdown("<br>", unsafe_allow_html=True)
 
-table_col, charts_col = st.columns([1.5, 1])
+table_col, charts_col = st.columns([1.4, 1])
 
-# TABLA
+# TABLA DINÁMICA
 with table_col:
     st.markdown('<div class="table-card">', unsafe_allow_html=True)
     st.markdown(
-        f'<div class="table-title">RANKING DE DISTRITOS ({year})</div>',
+        f'<div class="table-title">📋 RANKING DE DISTRITOS ({year})</div>',
         unsafe_allow_html=True
     )
 
     table_show = filtered[["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]].copy()
     table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
     table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
-
-    st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
+    
+    # Usar HTML para mayor control
+    html_table = table_show.to_html(escape=False, index=False, classes="ranking-table")
+    st.markdown(html_table, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# GRÁFICAS
+# GRÁFICAS DINÁMICAS
 with charts_col:
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     st.markdown('<div class="chart-title">📊 ANÁLISIS VISUAL</div>', unsafe_allow_html=True)
     
+    # Las gráficas se actualizan automáticamente cuando cambia el año
     st.pyplot(create_top10_chart(results), use_container_width=True)
     st.pyplot(create_risk_distribution_chart(results), use_container_width=True)
     
