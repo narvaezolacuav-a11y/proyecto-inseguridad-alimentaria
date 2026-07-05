@@ -670,7 +670,7 @@ def create_top10_chart(results):
     """Crea gráfica de Top 10 distritos con mayor riesgo"""
     top10 = results.nlargest(10, "IRIA")[["Distrito", "IRIA"]].reset_index(drop=True)
     
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(6, 5))
     colors_bar = ["#8B0000" if x >= 75 else "#F97316" if x >= 55 else "#EAB308" if x >= 35 else "#16A34A" 
                   for x in top10["IRIA"]]
     
@@ -678,12 +678,12 @@ def create_top10_chart(results):
     
     # Añadir valores en las barras
     for i, (bar, val) in enumerate(zip(bars, top10["IRIA"])):
-        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=9)
+        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=8)
     
-    ax.set_xlabel("Índice IRIA", fontsize=11, fontweight="bold", color="#00492F")
-    ax.set_ylabel("Distrito", fontsize=11, fontweight="bold", color="#00492F")
-    ax.set_title("Top 10 Distritos con Mayor Índice de Riesgo (IRIA)", 
-                 fontsize=12, fontweight="bold", color="#00492F", pad=20)
+    ax.set_xlabel("Índice IRIA", fontsize=10, fontweight="bold", color="#00492F")
+    ax.set_ylabel("Distrito", fontsize=10, fontweight="bold", color="#00492F")
+    ax.set_title("Top 10 Distritos - Mayor Riesgo", 
+                 fontsize=11, fontweight="bold", color="#00492F", pad=15)
     ax.set_xlim(0, 105)
     ax.grid(axis="x", alpha=0.3, linestyle="--")
     ax.set_facecolor("#F9FAFB")
@@ -699,25 +699,25 @@ def create_risk_distribution_chart(results):
     
     colors_list = [colors_pie.get(level, "#16A34A") for level in risk_counts.index]
     
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(6, 5))
     wedges, texts, autotexts = ax.pie(
         risk_counts.values,
         labels=risk_counts.index,
         autopct="%1.1f%%",
         colors=colors_list,
         startangle=90,
-        textprops={"fontsize": 11, "fontweight": "bold", "color": "white"},
+        textprops={"fontsize": 10, "fontweight": "bold", "color": "white"},
         explode=[0.05 if x == "Muy Alto" else 0 for x in risk_counts.index]
     )
     
     # Mejorar textos
     for text in texts:
         text.set_color("#00492F")
-        text.set_fontsize(11)
+        text.set_fontsize(10)
         text.set_fontweight("bold")
     
-    ax.set_title("Distribución de Distritos por Nivel de Riesgo", 
-                 fontsize=12, fontweight="bold", color="#00492F", pad=20)
+    ax.set_title("Distribución de Riesgos", 
+                 fontsize=11, fontweight="bold", color="#00492F", pad=15)
     
     fig.patch.set_facecolor("white")
     plt.tight_layout()
@@ -888,47 +888,47 @@ with r3:
     </div>
     """, unsafe_allow_html=True)
 
-# 📊 GRÁFICAS
+# 📊 TABLE Y GRÁFICAS LADO A LADO
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-st.markdown('<div class="chart-title">📈 ANÁLISIS VISUAL DE RIESGOS</div>', unsafe_allow_html=True)
 
-graph_col1, graph_col2 = st.columns(2)
+table_col, charts_col = st.columns([1.5, 1])
 
-with graph_col1:
+# TABLA
+with table_col:
+    st.markdown('<div class="table-card">', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="table-title">RANKING DE DISTRITOS ({year})</div>',
+        unsafe_allow_html=True
+    )
+
+    table_show = filtered[["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]].copy()
+    table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
+    table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
+
+    st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# GRÁFICAS
+with charts_col:
+    st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+    st.markdown('<div class="chart-title">📊 ANÁLISIS VISUAL</div>', unsafe_allow_html=True)
+    
     st.pyplot(create_top10_chart(results), use_container_width=True)
-
-with graph_col2:
     st.pyplot(create_risk_distribution_chart(results), use_container_width=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Table
-st.markdown('<div class="table-card">', unsafe_allow_html=True)
-st.markdown(
-    f'<div class="table-title">RANKING DE DISTRITOS - PROBABILIDAD Y NIVEL DE RIESGO ({year})</div>',
-    unsafe_allow_html=True
-)
-
-table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Interpretación"]].copy()
-table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
-table_show["IRIA"] = table_show["IRIA"].apply(lambda x: f"{x:.1f}")
-table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
-
-st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Explanation
 st.markdown(f"""
 <div class="explanation">
 <b>Interpretación de resultados:</b><br>
 Para el año <b>{year}</b>, el distrito con mayor probabilidad estimada de presentar inseguridad alimentaria es
-<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b> de probabilidad e índice IRIA de <b>{top_high["IRIA"]:.1f}</b>. 
+<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b> de probabilidad. 
 El modelo clasifica <b>{int(counts.get("Muy Alto", 0))}</b> distritos en riesgo muy alto,
 <b>{int(counts.get("Alto", 0))}</b> en riesgo alto,
 <b>{int(counts.get("Medio", 0))}</b> en riesgo medio y
 <b>{int(counts.get("Bajo", 0))}</b> en riesgo bajo.
-El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b> e índice IRIA de <b>{top_low["IRIA"]:.1f}</b>.
+El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
 <br><br>
 <b>Nota:</b> El nivel de riesgo está determinado por el Índice IRIA (Índice de Riesgo de Inseguridad Alimentaria) que pondera factores económicos, de vulnerabilidad y alimentarios.
 </div>
@@ -939,4 +939,3 @@ st.markdown(
     '<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>',
     unsafe_allow_html=True
 )
-
