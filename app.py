@@ -500,10 +500,10 @@ def clasificar_riesgo_iria(iria):
 
 def interpretacion(nivel):
     interpretaciones = {
-        "Muy Alto": "Probabilidad muy alta de presentar inseguridad alimentaria.",
-        "Alto": "Probabilidad alta de presentar inseguridad alimentaria.",
-        "Medio": "Probabilidad media de presentar inseguridad alimentaria.",
-        "Bajo": "Probabilidad baja de presentar inseguridad alimentaria."
+        "Muy Alto": "Probabilidad muy alta estimada de inseguridad alimentaria.",
+        "Alto": "Probabilidad alta estimada de inseguridad alimentaria.",
+        "Medio": "Probabilidad media estimada de inseguridad alimentaria.",
+        "Bajo": "Probabilidad baja estimada de inseguridad alimentaria."
     }
     return interpretaciones.get(nivel, "")
 
@@ -830,21 +830,6 @@ with r3:
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-# 📊 GRÁFICAS
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-st.markdown('<div class="chart-title">📈 ANÁLISIS VISUAL DE RIESGOS</div>', unsafe_allow_html=True)
-
-graph_col1, graph_col2 = st.columns(2)
-
-with graph_col1:
-    st.pyplot(create_top10_chart(results), use_container_width=True)
-
-with graph_col2:
-    st.pyplot(create_risk_distribution_chart(results), use_container_width=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
 
 # Table
 st.markdown('<div class="table-card">', unsafe_allow_html=True)
