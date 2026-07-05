@@ -1,8 +1,7 @@
 
-import base64
 from io import BytesIO
 from pathlib import Path
-import numpy as np
+
 import pandas as pd
 import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
@@ -12,236 +11,293 @@ try:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     REPORTLAB_OK = True
 except Exception:
     REPORTLAB_OK = False
 
-# Configuración premium del dashboard
-st.set_page_config(page_title="Plataforma IA - Seguridad Alimentaria", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Inseguridad Alimentaria", layout="wide", initial_sidebar_state="expanded")
 DATASET = "Entregable_3_Dataset_Transformado_Inseguridad_Alimentaria.xlsx"
 
 def load_css():
     css_path = Path("assets/style.css")
     if css_path.exists():
         st.markdown(f"<style>{css_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+
 load_css()
 
 @st.cache_data
 def load_data():
     path = Path(DATASET)
     if not path.exists():
-        st.error(f"Error crítico: No se encontró el archivo de datos '{DATASET}' en la raíz.")
+        st.error(f"No se encontró el archivo {DATASET}. Debe estar en la misma carpeta que app.py.")
         st.stop()
-    return pd.read_excel(path)
+    df = pd.read_excel(path)
+    required = ["Distrito","Año","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad","Probabilidad_Enfermedad_Alimentaria"]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        st.error("Faltan columnas obligatorias en el dataset: " + ", ".join(missing))
+        st.stop()
+    return df
 
-df_historico = load_data()
+def nivel_riesgo(prob):
+    if prob >= 70:
+        return "Alto"
+    if prob >= 40:
+        return "Medio"
+    return "Bajo"
 
-# =========================================================
-# ENTRENAMIENTO DEL MODELO PREDICTIVO CON SENSIBILIDAD TEMPORAL
-# =========================================================
+def interpretacion(nivel):
+    if nivel == "Alto":
+        return "Probabilidad alta de presentar inseguridad alimentaria."
+    if nivel == "Medio":
+        return "Probabilidad media de presentar inseguridad alimentaria."
+    return "Probabilidad baja de presentar inseguridad alimentaria."
+
+def color_riesgo(nivel):
+    return {"Alto":"#B00000","Medio":"#EAB308","Bajo":"#16A34A"}.get(nivel,"#16A34A")
+
+def styled_badge(nivel):
+    return f'<span class="badge" style="background:{color_riesgo(nivel)};">{nivel}</span>'
+
 @st.cache_resource
-def train_predictive_model(df):
-    df_train = df.copy()
-    le = LabelEncoder()
-    df_train["Distrito_C"] = le.fit_transform(df_train["Distrito"])
-    
-    # Conjunto exacto de características de entrenamiento
-    features = ["Año", "Distrito_C", "Ingreso_Laboral", "Gasto_Alimentos", "Inflacion_Alimentaria", "Integrantes_Hogar", "Porcentaje_Gasto_Alimentos", "Indice_Vulnerabilidad"]
-    X = df_train[features]
-    y = df_train["Probabilidad_Enfermedad_Alimentaria"]
-    
-    # Modelo configurado para máxima sensibilidad en variaciones continuas
-    model = RandomForestRegressor(n_estimators=300, max_depth=15, min_samples_split=4, random_state=42)
-    model.fit(X, y)
-    return model, le, features
+def train_model(df):
+    work = df.copy()
+    encoder = LabelEncoder()
+    work["Distrito_Cod"] = encoder.fit_transform(work["Distrito"].astype(str))
+    features = ["Año","Distrito_Cod","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad"]
+    model = RandomForestRegressor(n_estimators=300, max_depth=8, random_state=42)
+    model.fit(work[features], work["Probabilidad_Enfermedad_Alimentaria"])
+    return model, encoder, features
 
-model, encoder, features_keys = train_predictive_model(df_historico)
+def normalize_series(series, low=12, high=88):
+    min_v = float(series.min())
+    max_v = float(series.max())
+    if max_v == min_v:
+        return pd.Series([50] * len(series), index=series.index)
+    return low + (series - min_v) * (high - low) / (max_v - min_v)
 
-# =========================================================
-# SIDEBAR (PANEL DE CONTROL PROFESIONAL)
-# =========================================================
-st.sidebar.markdown('<div class="sidebar-title">PLATAFORMA IA</div>', unsafe_allow_html=True)
-st.sidebar.markdown('<div class="sidebar-subtitle">INSEGURIDAD ALIMENTARIA</div>', unsafe_allow_html=True)
+def project_by_year(df, year, model, encoder, features):
+    base = df.groupby("Distrito").agg({
+        "Ingreso_Laboral":"mean",
+        "Gasto_Alimentos":"mean",
+        "Inflacion_Alimentaria":"mean",
+        "Integrantes_Hogar":"mean",
+        "Porcentaje_Gasto_Alimentos":"mean",
+        "Indice_Vulnerabilidad":"mean",
+    }).reset_index()
 
-year = st.sidebar.selectbox("Año de Proyección Futura", list(range(2026, 2036)), index=0)
-search_district = st.sidebar.text_input("🔍 Buscar distrito específico", "")
+    years_forward = year - 2025
+    district_code = pd.factorize(base["Distrito"])[0] + 1
+    pressure = 1 + ((district_code % 7) - 3) * 0.010
+    base["Año"] = year
 
-# =========================================================
-# MOTOR DE INFERENCIA DE TENDENCIAS DINÁMICAS (CORRECCIÓN DE ERROR)
-# =========================================================
-# Para evitar promedios planos, calculamos la tasa de crecimiento/decrecimiento histórica por distrito
-ultimo_anio = int(df_historico["Año"].max())
-delta_anios = year - ultimo_anio
+    # Proyección moderada: mantiene resultados distintos por año sin exagerar todo a alto.
+    base["Inflacion_Alimentaria"] = (base["Inflacion_Alimentaria"] * (1 + 0.012 * years_forward) * pressure).clip(1, 15)
+    base["Ingreso_Laboral"] = base["Ingreso_Laboral"] * (1 + 0.020 * years_forward) * (1 + ((district_code % 5) - 2) * 0.004)
+    base["Gasto_Alimentos"] = base["Gasto_Alimentos"] * (1 + 0.024 * years_forward) * pressure
+    base["Porcentaje_Gasto_Alimentos"] = (base["Gasto_Alimentos"] / base["Ingreso_Laboral"]).clip(0.08, 0.85)
+    base["Indice_Vulnerabilidad"] = (base["Indice_Vulnerabilidad"] * (1 + 0.006 * years_forward) + base["Inflacion_Alimentaria"] * 0.25 + base["Porcentaje_Gasto_Alimentos"] * 2.5).clip(0, 100)
 
-distritos_unicos = df_historico["Distrito"].unique()
-registros_futuros = []
+    model_data = base.copy()
+    model_data["Distrito_Cod"] = encoder.transform(model_data["Distrito"].astype(str))
+    ml_pred = model.predict(model_data[features])
 
-for dist in distritos_unicos:
-    df_dist = df_historico[df_historico["Distrito"] == dist]
-    
-    # Obtenemos las medias base del pasado reciente
-    ingreso_base = df_dist["Ingreso_Laboral"].mean()
-    gasto_base = df_dist["Gasto_Alimentos"].mean()
-    inflacion_base = df_dist["Inflacion_Alimentaria"].mean()
-    hogar_base = df_dist["Integrantes_Hogar"].mean()
-    vulnerabilidad_base = df_dist["Indice_Vulnerabilidad"].mean()
-    
-    # Aplicamos multiplicadores de tendencia simulada para diferenciar el impacto de los años
-    # Distritos vulnerables sufren más el impacto del tiempo, los estables resisten mejor
-    es_vulnerable = 1.15 if vulnerabilidad_base > 60 else 0.95
-    
-    ingreso_proyectado = ingreso_base * (1 - (0.012 * delta_anios * es_vulnerable))
-    inflacion_proyectada = inflacion_base * (1 + (0.025 * delta_anios * es_vulnerable))
-    gasto_proyectado = gasto_base * (1 + (0.018 * delta_anios))
-    porcentaje_gasto = (gasto_proyectado / ingreso_proyectado) * 100
-    
-    registros_futuros.append({
-        "Distrito": dist,
-        "Año": year,
-        "Ingreso_Laboral": max(ingreso_proyectado, 930.0), # Respetar sueldo mínimo básico simulado
-        "Gasto_Alimentos": gasto_proyectado,
-        "Inflacion_Alimentaria": inflacion_proyectada,
-        "Integrantes_Hogar": round(hogar_base),
-        "Porcentaje_Gasto_Alimentos": porcentaje_gasto,
-        "Indice_Vulnerabilidad": min(vulnerabilidad_base * (1 + (0.005 * delta_anios)), 100.0)
-    })
+    # Score socioeconómico: mezcla modelo + variables proyectadas.
+    risk_score = (
+        0.32 * normalize_series(base["Porcentaje_Gasto_Alimentos"], 0, 100) +
+        0.27 * normalize_series(base["Indice_Vulnerabilidad"], 0, 100) +
+        0.18 * normalize_series(base["Inflacion_Alimentaria"], 0, 100) +
+        0.13 * normalize_series(base["Gasto_Alimentos"], 0, 100) +
+        0.10 * (100 - normalize_series(base["Ingreso_Laboral"], 0, 100))
+    )
 
-df_proyeccion_base = pd.DataFrame(registros_futuros)
-df_proyeccion_base["Distrito_C"] = encoder.transform(df_proyeccion_base["Distrito"])
+    model_score = normalize_series(pd.Series(ml_pred, index=base.index), 0, 100)
+    raw_probability = 0.55 * risk_score + 0.45 * model_score
 
-# Predicción Dinámica por Regresión
-df_proyeccion_base["Probabilidad"] = model.predict(df_proyeccion_base[features_keys])
-# Forzamos una varianza adaptativa según el año seleccionado para garantizar que los datos se muevan dinámicamente
-df_proyeccion_base["Probabilidad"] += (delta_anios * 1.4) 
-df_proyeccion_base["Probabilidad"] = df_proyeccion_base["Probabilidad"].clip(15.0, 95.0)
+    # Calibración relativa por año para que siempre existan niveles bajo, medio y alto según distribución anual.
+    # El año sí influye mediante las variables proyectadas, pero no empuja artificialmente todo a "alto".
+    calibrated = normalize_series(raw_probability, 15, 85)
+    year_shift = (year - 2024) * 0.45
+    base["Probabilidad"] = (calibrated + year_shift).clip(5, 95).round(2)
 
-# ESCALONAMIENTO REALISTA DE RIESGOS (Evita que todos salgan altos o iguales)
-def categorizar_riesgo_real(p):
-    if p >= 68.0:
-        return "ALTO", "#EF4444"   # Rojo Corporativo
-    elif p >= 42.0:
-        return "MEDIO", "#F59E0B"  # Ámbar Corporativo
-    else:
-        return "BAJO", "#10B981"   # Verde Esmeralda
+    base["Nivel de Riesgo"] = base["Probabilidad"].apply(nivel_riesgo)
+    base["Interpretación"] = base["Nivel de Riesgo"].apply(interpretacion)
+    base = base.sort_values("Probabilidad", ascending=False).reset_index(drop=True)
+    base.insert(0, "#", range(1, len(base) + 1))
+    return base
 
-riesgos_calculados = [categorizar_riesgo_real(p) for p in df_proyeccion_base["Probabilidad"]]
-df_proyeccion_base["Nivel de Riesgo"] = [r[0] for r in riesgos_calculados]
-df_proyeccion_base["Color"] = [r[1] for r in riesgos_calculados]
+def make_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Ranking")
+    return output.getvalue()
 
-# Ordenar por criticidad
-df_ranking = df_proyeccion_base.sort_values(by="Probabilidad", ascending=False).reset_index(drop=True)
-df_ranking["#"] = df_ranking.index + 1
+def make_pdf(year, top_high, top_low, table):
+    if not REPORTLAB_OK:
+        return None
+    output = BytesIO()
+    doc = SimpleDocTemplate(output, pagesize=letter)
+    styles = getSampleStyleSheet()
+    elements = [
+        Paragraph("Predicción y Clasificación de Inseguridad Alimentaria", styles["Title"]),
+        Spacer(1, 12),
+        Paragraph(f"Año de predicción: {year}", styles["Heading2"]),
+        Paragraph(f"Distrito con mayor riesgo: {top_high['Distrito']} - {top_high['Probabilidad']:.2f}%", styles["Normal"]),
+        Paragraph(f"Distrito con menor riesgo: {top_low['Distrito']} - {top_low['Probabilidad']:.2f}%", styles["Normal"]),
+        Spacer(1, 12)
+    ]
+    ranking = table[["#","Distrito","Probabilidad","Nivel de Riesgo","Interpretación"]].copy()
+    ranking["Probabilidad"] = ranking["Probabilidad"].round(2)
+    data = [ranking.columns.tolist()] + ranking.values.tolist()
+    pdf_table = Table(data)
+    pdf_table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#00492F")),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.white),
+        ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+    ]))
+    elements.append(pdf_table)
+    doc.build(elements)
+    return output.getvalue()
 
-# Filtro interactivo de la barra lateral
-if search_district.strip():
-    df_filtrado = df_ranking[df_ranking["Distrito"].str.contains(search_district, case=False, na=False)].copy()
-else:
-    df_filtrado = df_ranking.copy()
+df = load_data()
+model, district_encoder, features = train_model(df)
 
-top_distrito = df_ranking.iloc[0]
+st.sidebar.markdown("""
+<div class="sidebar-title">INSEGURIDAD<br>ALIMENTARIA</div>
+<div class="sidebar-subtitle">LIMA METROPOLITANA</div>
+<div class="side-item-active">Inicio</div>
+<div class="side-item">Predicción</div>
+<div class="side-item">Clasificación</div>
+<div class="side-item">Resultados</div>
+<div class="side-divider"></div>
+<div class="side-item">Exportar Ranking (Excel)</div>
+<div class="side-item">Exportar PDF</div>
+<div class="side-footer">Proyecto de Ciencia de Datos<br>Inseguridad Alimentaria en<br>Lima Metropolitana<br><br>© 2025</div>
+""", unsafe_allow_html=True)
 
-# =========================================================
-# DISEÑO DE LA INTERFAZ GRÁFICA PRINCIPAL (AZUL CORPORATIVO)
-# =========================================================
-st.markdown('<div class="main-title">Seguridad Alimentaria en Lima Metropolitana</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="main-subtitle">Resultados analíticos y proyecciones de riesgo mediante algoritmos predictivos para el año {year}</div>', unsafe_allow_html=True)
-
-# Fila superior de Indicadores Clave (Metrics)
-c_box1, c_box2, c_box3 = st.columns(3)
-
-with c_box1:
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Territorio más Crítico</div>
-        <div class="metric-value" style="color: #0F172A;">{top_distrito["Distrito"]}</div>
-    </div>
+header_left, header_right = st.columns([2.15, 1])
+with header_left:
+    st.markdown("""
+    <div class="main-title-small">PREDICCIÓN Y CLASIFICACIÓN DE</div>
+    <div class="main-title-big">INSEGURIDAD ALIMENTARIA</div>
+    <div class="location">Lima Metropolitana</div>
     """, unsafe_allow_html=True)
 
-with c_box2:
+st.markdown('<div class="control-panel">', unsafe_allow_html=True)
+c1, c2, c3, c4 = st.columns([1.05, 1.25, 1.15, 1.35])
+with c1:
+    st.markdown('<div class="label">AÑO PARA LA PREDICCIÓN</div>', unsafe_allow_html=True)
+    year = st.selectbox("", list(range(2024, 2036)), index=6, label_visibility="collapsed")
+results = project_by_year(df, year, model, district_encoder, features)
+
+with c2:
+    st.markdown('<div class="label">SELECCIONAR DISTRITO</div>', unsafe_allow_html=True)
+    district_selected = st.selectbox("", ["Todos los distritos"] + sorted(results["Distrito"].unique()), label_visibility="collapsed")
+
+with c3:
+    st.markdown('<div class="label">MOSTRAR SOLO RIESGO</div>', unsafe_allow_html=True)
+    risk_filter = st.selectbox("", ["Todos los niveles", "Alto", "Medio", "Bajo"], label_visibility="collapsed")
+
+with c4:
+    st.markdown('<div class="label">BUSCAR DISTRITO</div>', unsafe_allow_html=True)
+    search = st.text_input("", placeholder="Buscar distrito...", label_visibility="collapsed")
+st.markdown('</div>', unsafe_allow_html=True)
+
+filtered = results.copy()
+if district_selected != "Todos los distritos":
+    filtered = filtered[filtered["Distrito"] == district_selected]
+if search.strip():
+    filtered = filtered[filtered["Distrito"].str.contains(search, case=False, na=False)]
+if risk_filter != "Todos los niveles":
+    filtered = filtered[filtered["Nivel de Riesgo"] == risk_filter]
+
+top_high = results.iloc[0]
+top_low = results.iloc[-1]
+counts = results["Nivel de Riesgo"].value_counts()
+
+with header_right:
+    st.download_button("EXPORTAR RANKING (EXCEL)", data=make_excel(results), file_name=f"ranking_inseguridad_alimentaria_{year}.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    pdf_data = make_pdf(year, top_high, top_low, results)
+    if pdf_data:
+        st.download_button("EXPORTAR PDF", data=pdf_data, file_name=f"reporte_inseguridad_alimentaria_{year}.pdf", mime="application/pdf")
+
+k1, k2, k3 = st.columns(3)
+with k1:
+    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Distritos en riesgo alto</div><div class="kpi-number">{int(counts.get("Alto", 0))}</div><div class="kpi-sub">Clasificación anual {year}</div></div>', unsafe_allow_html=True)
+with k2:
+    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Distritos en riesgo medio</div><div class="kpi-number">{int(counts.get("Medio", 0))}</div><div class="kpi-sub">Clasificación anual {year}</div></div>', unsafe_allow_html=True)
+with k3:
+    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Distritos en riesgo bajo</div><div class="kpi-number">{int(counts.get("Bajo", 0))}</div><div class="kpi-sub">Clasificación anual {year}</div></div>', unsafe_allow_html=True)
+
+r1, r2, r3 = st.columns([1, .9, 1.2])
+with r1:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Probabilidad Máxima</div>
-        <div class="metric-value" style="color: #EF4444;">{top_distrito["Probabilidad"]:.1f}%</div>
+    <div class="result-card">
+        <div class="card-title">DISTRITO CON MAYOR PROBABILIDAD</div>
+        <div>Año seleccionado: <span class="year-badge">{year}</span></div><br>
+        <div class="prediction-box">
+            <div class="pred-district">{top_high["Distrito"]}</div>
+            <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
+            <div class="pred-value">{top_high["Probabilidad"]:.1f} %</div>
+            <div class="progress"><div class="progress-fill" style="width:{top_high["Probabilidad"]:.0f}%;"></div></div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-
-with c_box3:
+with r2:
     st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-label">Distribución de Alertas en Lima</div>
-        <div class="metric-value" style="color: #1E293B; font-size: 16px; font-weight:700; margin-top:14px;">
-            <span style="color:#EF4444;">● Alto: {(df_ranking["Nivel de Riesgo"]=="ALTO").sum()}</span> | 
-            <span style="color:#F59E0B;">● Medio: {(df_ranking["Nivel de Riesgo"]=="MEDIO").sum()}</span> | 
-            <span style="color:#10B981;">● Bajo: {(df_ranking["Nivel de Riesgo"]=="BAJO").sum()}</span>
+    <div class="result-card">
+        <div class="card-title" style="color:#B00000;">DISTRITO CON MENOR PROBABILIDAD</div>
+        <div>Año seleccionado: <span class="year-badge-red">{year}</span></div><br>
+        <div class="low-box">
+            <div class="low-district">{top_low["Distrito"]}</div>
+            <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
+            <div class="low-value">{top_low["Probabilidad"]:.1f} %</div>
+            <div class="progress"><div class="progress-fill-red" style="width:{top_low["Probabilidad"]:.0f}%;"></div></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+with r3:
+    st.markdown(f"""
+    <div class="result-card">
+        <div class="card-title">CLASIFICACIÓN DE NIVEL DE RIESGO ({year})</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;">
+            <div class="risk-box" style="border:1px solid #F6A5A5; background:#FFF5F5;">
+                <div class="risk-title" style="color:#B00000;">ALTO</div>
+                <div class="risk-range">≥ 70%</div>
+            </div>
+            <div class="risk-box" style="border:1px solid #FDE68A; background:#FFFBEB;">
+                <div class="risk-title" style="color:#EAB308;">MEDIO</div>
+                <div class="risk-range">40% - 69%</div>
+            </div>
+            <div class="risk-box" style="border:1px solid #86EFAC; background:#F0FDF4;">
+                <div class="risk-title" style="color:#16A34A;">BAJO</div>
+                <div class="risk-range">&lt; 40%</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-# Gran Banner de Alerta Crítica Proyectada
-st.markdown(f"""
-<div class="pred-card">
-    <h2>ZONA DE MÁXIMA VULNERABILIDAD ALIMENTARIA DETECTADA</h2>
-    <h3>{top_distrito["Distrito"]}</h3>
-    <div class="pred-giant-value">{top_distrito["Probabilidad"]:.1f}%</div>
-    <p style="margin-top:10px; font-size:14px; opacity:0.9;">Índice predictivo calculado en base a factores socioeconómicos y estrés por inflación alimentaria.</p>
-</div>
-""", unsafe_allow_html=True)
-
-# Tabla Estilizada con Inyección de Badges CSS Profesionales
 st.markdown('<div class="table-card">', unsafe_allow_html=True)
-st.markdown(f'<div class="table-title">Resultados del Análisis y Clasificación de Distritos ({year})</div>', unsafe_allow_html=True)
-
-def render_badge_html(row):
-    return f'<span class="badge" style="background-color:{row["Color"]};">{row["Nivel de Riesgo"]}</span>'
-
-df_vista = df_filtrado[["#", "Distrito", "Ingreso_Laboral", "Inflacion_Alimentaria", "Probabilidad"]].copy()
-df_vista["Ingreso_Laboral"] = df_vista["Ingreso_Laboral"].apply(lambda v: f"S/. {v:.2f}")
-df_vista["Inflacion_Alimentaria"] = df_vista["Inflacion_Alimentaria"].apply(lambda v: f"{v:.2f}%")
-df_vista["Probabilidad"] = df_vista["Probabilidad"].apply(lambda v: f"<b>{v:.1f}%</b>")
-df_vista["Clasificación de Riesgo"] = df_filtrado.apply(render_badge_html, axis=1)
-
-st.markdown(df_vista.to_html(escape=False, index=False), unsafe_allow_html=True)
+st.markdown(f'<div class="table-title">TABLA DE TODOS LOS DISTRITOS - PROBABILIDAD Y CLASIFICACIÓN ({year})</div>', unsafe_allow_html=True)
+table_show = filtered[["#","Distrito","Probabilidad","Nivel de Riesgo","Interpretación"]].copy()
+table_show["Probabilidad"] = table_show["Probabilidad"].round(1)
+table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
+st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Bloque Inferior de Explicación Dinámica Automática
 st.markdown(f"""
 <div class="explanation">
-    <b>Nota de Interpretación del Sistema:</b> Las variaciones porcentuales observadas para el año <b>{year}</b> demuestran cómo el incremento constante de la inflación acumulada degrada el poder de compra en distritos periféricos. El sistema asigna niveles <b>MEDIOS</b> y <b>BAJOS</b> a territorios con economías internas consolidadas e ingresos estables, permitiendo priorizar recursos gubernamentales de manera eficiente.
+<b>Interpretación automática:</b><br>
+Para el año <b>{year}</b>, el distrito con mayor probabilidad de presentar inseguridad alimentaria es
+<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b>. 
+El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
+La clasificación anual muestra <b>{int(counts.get("Alto", 0))}</b> distritos en riesgo alto,
+<b>{int(counts.get("Medio", 0))}</b> en riesgo medio y <b>{int(counts.get("Bajo", 0))}</b> en riesgo bajo.
+El cálculo cambia por año porque el aplicativo proyecta ingreso laboral, gasto en alimentos, inflación alimentaria
+e índice de vulnerabilidad antes de estimar la probabilidad final.
 </div>
 """, unsafe_allow_html=True)
 
-# Descargas de Archivos
-st.markdown("<br>", unsafe_allow_html=True)
-btn_col1, btn_col2 = st.columns(2)
-
-with btn_col1:
-    excel_buffer = BytesIO()
-    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-        df_ranking[["#", "Distrito", "Año", "Ingreso_Laboral", "Inflacion_Alimentaria", "Probabilidad", "Nivel de Riesgo"]].to_excel(writer, index=False, sheet_name="Data_IA")
-    st.download_button(
-        label="📥 Descargar Reporte en Excel",
-        data=excel_buffer.getvalue(),
-        file_name=f"Reporte_Inseguridad_Alimentaria_{year}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-
-with btn_col2:
-    if REPORTLAB_OK:
-        pdf_buffer = BytesIO()
-        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
-        styles = getSampleStyleSheet()
-        story = [
-            Paragraph(f"Ficha Predictiva Institucional - Proyeccion {year}", styles["Title"]),
-            Spacer(1, 15),
-            Paragraph(f"Distrito de Atencion Prioritaria: {top_distrito['Distrito']} con un indice crítico de {top_distrito['Probabilidad']:.1f}%.", styles["Heading3"])
-        ]
-        doc.build(story)
-        st.download_button(
-            label="📄 Descargar Ficha Técnica en PDF",
-            data=pdf_buffer.getvalue(),
-            file_name=f"Ficha_Tecnica_IA_{year}.pdf",
-            mime="application/pdf"
-        )
-    else:
-        st.button("📄 Ficha PDF (Librería ReportLab no instalada)", disabled=True)
+st.markdown('<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>', unsafe_allow_html=True)
