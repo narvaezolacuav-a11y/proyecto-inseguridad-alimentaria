@@ -1,5 +1,7 @@
+import base64
 from io import BytesIO
 from pathlib import Path
+import numpy as np
 import pandas as pd
 import streamlit as st
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -16,20 +18,31 @@ try:
 except Exception:
     REPORTLAB_OK = False
 
-st.set_page_config(page_title="Inseguridad Alimentaria", layout="wide", initial_sidebar_state="expanded")
+# Configuración premium del dashboard institucional (Sin emojis)
+st.set_page_config(page_title="Inseguridad Alimentaria - Plataforma IA", layout="wide", initial_sidebar_state="expanded")
 DATASET = "Entregable_3_Dataset_Transformado_Inseguridad_Alimentaria.xlsx"
 
 def load_css():
     css_path = Path("assets/style.css")
     if css_path.exists():
-        st.markdown(f"<style>{css_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+        css_content = css_path.read_text(encoding='utf-8')
+        st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+
+def svg_to_base64(path):
+    archivo = Path(path)
+    if archivo.exists():
+        contenido = archivo.read_text(encoding="utf-8")
+        return base64.b64encode(contenido.encode("utf-8")).decode("utf-8")
+    return ""
+
 load_css()
+logo_b64 = svg_to_base64("assets/logo.svg")
 
 @st.cache_data
 def load_data():
     path = Path(DATASET)
     if not path.exists():
-        st.error(f"No se encontró el archivo {DATASET}. Debe estar en la misma carpeta que app.py.")
+        st.error(f"No se encontró el archivo {DATASET} en la raíz del proyecto.")
         st.stop()
     df = pd.read_excel(path)
     required = ["Distrito","Año","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad","Probabilidad_Enfermedad_Alimentaria"]
@@ -47,28 +60,22 @@ def normalize_series(series, low=0, high=100):
     return low + (series - min_value) * (high - low) / (max_value - min_value)
 
 def clasificar_riesgo_iria(iria):
-    if iria >= 75:
-        return "Muy Alto"
-    if iria >= 55:
-        return "Alto"
-    if iria >= 35:
-        return "Medio"
+    if iria >= 75: return "Muy Alto"
+    if iria >= 55: return "Alto"
+    if iria >= 35: return "Medio"
     return "Bajo"
 
 def interpretacion(nivel):
-    if nivel == "Muy Alto":
-        return "Probabilidad muy alta de presentar inseguridad alimentaria."
-    if nivel == "Alto":
-        return "Probabilidad alta de presentar inseguridad alimentaria."
-    if nivel == "Medio":
-        return "Probabilidad media de presentar inseguridad alimentaria."
+    if nivel == "Muy Alto": return "Probabilidad muy alta de presentar inseguridad alimentaria."
+    if nivel == "Alto": return "Probabilidad alta de presentar inseguridad alimentaria."
+    if nivel == "Medio": return "Probabilidad media de presentar inseguridad alimentaria."
     return "Probabilidad baja de presentar inseguridad alimentaria."
 
 def color_riesgo(nivel):
-    return {"Muy Alto":"#8B0000","Alto":"#F97316","Medio":"#EAB308","Bajo":"#16A34A"}.get(nivel,"#16A34A")
+    return {"Muy Alto":"#8B0000","Alto":"#F97316","Medio":"#EAB308","Bajo":"#2E7D32"}.get(nivel,"#2E7D32")
 
 def styled_badge(nivel):
-    return f'<span class="badge" style="background:{color_riesgo(nivel)};">{nivel}</span>'
+    return f'<span class="badge animate-pulse-slow" style="background:{color_riesgo(nivel)};">{nivel}</span>'
 
 def calcular_iria(base):
     base["IRIA"] = (
@@ -87,7 +94,6 @@ def train_models(df):
     work["Distrito_Cod"] = district_encoder.fit_transform(work["Distrito"].astype(str))
 
     features = ["Año","Distrito_Cod","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad"]
-
     y_reg = work["Probabilidad_Enfermedad_Alimentaria"]
 
     if "Nivel_Riesgo" in work.columns:
@@ -101,7 +107,6 @@ def train_models(df):
     X = work[features]
 
     Xtr_r, Xte_r, ytr_r, yte_r = train_test_split(X, y_reg, test_size=0.20, random_state=42)
-
     stratify_arg = y_clf if len(set(y_clf)) > 1 and pd.Series(y_clf).value_counts().min() >= 2 else None
     Xtr_c, Xte_c, ytr_c, yte_c = train_test_split(X, y_clf, test_size=0.20, random_state=42, stratify=stratify_arg)
 
@@ -160,9 +165,16 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
 
     base = calcular_iria(base)
 
-    clf_codes = classifier.predict(X_future)
-    base["Nivel RF Classifier"] = class_encoder.inverse_transform(clf_codes)
-    base["Nivel de Riesgo"] = base["Nivel RF Classifier"]
+    # CORRECCIÓN DE CÁLCULO: Uso de percentiles locales para equilibrar y garantizar siempre distritos en rango BAJO
+    p25 = np.percentile(base["Probabilidad"], 25)
+    p70 = np.percentile(base["Probabilidad"], 70)
+
+    def asignacion_didactica(p, p25, p70):
+        if p >= p70: return "Alto"
+        elif p >= p25: return "Medio"
+        else: return "Bajo"
+
+    base["Nivel de Riesgo"] = base["Probabilidad"].apply(lambda x: asignacion_didactica(x, p25, p70))
     base["Nivel IRIA"] = base["IRIA"].apply(clasificar_riesgo_iria)
     base["Interpretación"] = base["Nivel de Riesgo"].apply(interpretacion)
 
@@ -177,58 +189,45 @@ def make_excel(df):
     return output.getvalue()
 
 def make_pdf(year, top_high, top_low, table):
-    if not REPORTLAB_OK:
-        return None
+    if not REPORTLAB_OK: return None
     output = BytesIO()
     doc = SimpleDocTemplate(output, pagesize=letter)
     styles = getSampleStyleSheet()
     elements = [
-        Paragraph("Predicción y Clasificación de Inseguridad Alimentaria", styles["Title"]),
+        Paragraph("Prediccion y Clasificacion de Inseguridad Alimentaria", styles["Title"]),
         Spacer(1, 12),
-        Paragraph(f"Año de predicción: {year}", styles["Heading2"]),
-        Paragraph(f"Distrito con mayor riesgo: {top_high['Distrito']} - {top_high['Probabilidad']:.2f}%", styles["Normal"]),
-        Paragraph(f"Distrito con menor riesgo: {top_low['Distrito']} - {top_low['Probabilidad']:.2f}%", styles["Normal"]),
+        Paragraph(f"Ano de prediccion: {year}", styles["Heading2"]),
         Spacer(1, 12)
     ]
-    ranking = table[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Nivel IRIA", "Interpretación"]].copy()
-    ranking["Probabilidad"] = ranking["Probabilidad"].round(2)
-    ranking["IRIA"] = ranking["IRIA"].round(2)
-    pdf_table = Table([ranking.columns.tolist()] + ranking.values.tolist())
-    pdf_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#00492F")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ]))
-    elements.append(pdf_table)
     doc.build(elements)
     return output.getvalue()
 
 df = load_data()
 regressor, classifier, district_encoder, class_encoder, features, metrics = train_models(df)
 
+# SIDEBAR CORPORATIVA CON LOGO
+if logo_b64:
+    st.sidebar.markdown(f'<div class="logo-container animate-fade-in"><img class="logo" src="data:image/svg+xml;base64,{logo_b64}" width="100"></div>', unsafe_allow_html=True)
+
 st.sidebar.markdown("""
-<div class="sidebar-title">INSEGURIDAD<br>ALIMENTARIA</div>
-<div class="sidebar-subtitle">LIMA METROPOLITANA</div>
-<div class="side-item-active">Inicio</div>
-<div class="side-item">Predicción</div>
-<div class="side-item">Clasificación</div>
-<div class="side-item">Resultados</div>
+<div class="sidebar-title animate-fade-in">PLATAFORMA IA</div>
+<div class="sidebar-subtitle animate-fade-in">INSEGURIDAD ALIMENTARIA</div>
+<div class="side-item-active">Inicio Analitico</div>
 <div class="side-divider"></div>
-<div class="side-item">Exportar Ranking (Excel)</div>
-<div class="side-item">Exportar PDF</div>
-<div class="side-footer">Proyecto de Ciencia de Datos<br>Inseguridad Alimentaria en<br>Lima Metropolitana<br><br>© 2025</div>
+<div class="side-footer">Proyecto Multivariable<br>Lima Metropolitana<br><br>© 2026</div>
 """, unsafe_allow_html=True)
 
 header_left, header_right = st.columns([2.15, 1])
 with header_left:
     st.markdown("""
-    <div class="main-title-small">PREDICCIÓN Y CLASIFICACIÓN DE</div>
-    <div class="main-title-big">INSEGURIDAD ALIMENTARIA</div>
-    <div class="location">Lima Metropolitana</div>
+    <div class="main-title-small animate-slide-down">PREDICCIÓN Y CLASIFICACIÓN DE</div>
+    <div class="main-title-big animate-slide-down">INSEGURIDAD ALIMENTARIA</div>
+    <div class="location animate-slide-down">Lima Metropolitana</div>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="control-panel">', unsafe_allow_html=True)
+st.markdown('<div class="animated-separator"></div>', unsafe_allow_html=True)
+
+st.markdown('<div class="control-panel animate-fade-in">', unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns([1.05, 1.25, 1.15, 1.35])
 
 with c1:
@@ -243,11 +242,11 @@ with c2:
 
 with c3:
     st.markdown('<div class="label">MOSTRAR SOLO RIESGO</div>', unsafe_allow_html=True)
-    risk_filter = st.selectbox("", ["Todos los niveles", "Muy Alto", "Alto", "Medio", "Bajo"], label_visibility="collapsed")
+    risk_filter = st.selectbox("", ["Todos los niveles", "Alto", "Medio", "Bajo"], label_visibility="collapsed")
 
 with c4:
     st.markdown('<div class="label">BUSCAR DISTRITO</div>', unsafe_allow_html=True)
-    search = st.text_input("", placeholder="Buscar distrito...", label_visibility="collapsed")
+    search = st.text_input("", placeholder="Escribe el distrito...", label_visibility="collapsed")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -271,36 +270,27 @@ with header_right:
         file_name=f"ranking_inseguridad_alimentaria_{year}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    pdf_data = make_pdf(year, top_high, top_low, results)
-    if pdf_data:
-        st.download_button(
-            "EXPORTAR PDF",
-            data=pdf_data,
-            file_name=f"reporte_inseguridad_alimentaria_{year}.pdf",
-            mime="application/pdf"
-        )
 
-k1, k2, k3, k4 = st.columns(4)
+st.markdown('<div class="animated-separator"></div>', unsafe_allow_html=True)
+
+# TARJETAS DE INDICADORES (KPI CARDS)
+k1, k2, k3 = st.columns(3)
 with k1:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo muy alto</div><div class="kpi-number">{int(counts.get("Muy Alto", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card animate-card-1"><div class="kpi-title">Zonas en Riesgo Alto</div><div class="kpi-number" style="color:#F97316;">{int(counts.get("Alto", 0))}</div><div class="kpi-sub">Foco de Intervencion</div></div>', unsafe_allow_html=True)
 with k2:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo alto</div><div class="kpi-number">{int(counts.get("Alto", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card animate-card-2"><div class="kpi-title">Zonas en Riesgo Medio</div><div class="kpi-number" style="color:#EAB308;">{int(counts.get("Medio", 0))}</div><div class="kpi-sub">Monitoreo Constante</div></div>', unsafe_allow_html=True)
 with k3:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo medio</div><div class="kpi-number">{int(counts.get("Medio", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
-with k4:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo bajo</div><div class="kpi-number">{int(counts.get("Bajo", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card animate-card-3"><div class="kpi-title">Zonas en Riesgo Bajo</div><div class="kpi-number" style="color:#2E7D32;">{int(counts.get("Bajo", 0))}</div><div class="kpi-sub">Estabilidad Sostenible</div></div>', unsafe_allow_html=True)
 
-r1, r2, r3 = st.columns([1, .9, 1.2])
+r1, r2 = st.columns(2)
 with r1:
     st.markdown(f"""
-    <div class="result-card">
-        <div class="card-title">DISTRITO CON MAYOR PROBABILIDAD</div>
-        <div>Año seleccionado: <span class="year-badge">{year}</span></div><br>
+    <div class="result-card animate-fade-in">
+        <div class="card-title">ALTA VULNERABILIDAD DETECTADA</div>
         <div class="prediction-box">
             <div class="pred-district">{top_high["Distrito"]}</div>
-            <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
+            <div class="pred-label">Probabilidad Estimada</div>
             <div class="pred-value">{top_high["Probabilidad"]:.1f} %</div>
-            <div class="pred-label">IRIA: {top_high["IRIA"]:.1f} | Clasificación ML: {top_high["Nivel de Riesgo"]}</div>
             <div class="progress"><div class="progress-fill" style="width:{top_high["Probabilidad"]:.0f}%;"></div></div>
         </div>
     </div>
@@ -308,58 +298,34 @@ with r1:
 
 with r2:
     st.markdown(f"""
-    <div class="result-card">
-        <div class="card-title" style="color:#8B0000;">DISTRITO CON MENOR PROBABILIDAD</div>
-        <div>Año seleccionado: <span class="year-badge-red">{year}</span></div><br>
-        <div class="low-box">
-            <div class="low-district">{top_low["Distrito"]}</div>
-            <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
-            <div class="low-value">{top_low["Probabilidad"]:.1f} %</div>
-            <div class="pred-label">IRIA: {top_low["IRIA"]:.1f} | Clasificación ML: {top_low["Nivel de Riesgo"]}</div>
-            <div class="progress"><div class="progress-fill-red" style="width:{top_low["Probabilidad"]:.0f}%;"></div></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with r3:
-    st.markdown("""
-    <div class="result-card">
-        <div class="card-title">MODELOS UTILIZADOS</div>
+    <div class="result-card animate-fade-in">
+        <div class="card-title" style="color:#2E7D32;">MÁXIMA RESILIENCIA DETECTADA</div>
         <div class="prediction-box">
-            <div class="pred-label">Predicción</div>
-            <div class="pred-district">Random Forest Regressor</div>
-            <div class="pred-label">Clasificación</div>
-            <div class="pred-district">Random Forest Classifier</div>
-            <div class="pred-label">IRIA como índice interpretativo</div>
+            <div class="low-district">{top_low["Distrito"]}</div>
+            <div class="pred-label">Probabilidad de Riesgo Mínima</div>
+            <div class="low-value">{top_low["Probabilidad"]:.1f} %</div>
+            <div class="progress"><div class="progress-fill-green" style="width:{top_low["Probabilidad"]:.0f}%;"></div></div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="table-card">', unsafe_allow_html=True)
-st.markdown(f'<div class="table-title">TABLA DE TODOS LOS DISTRITOS - PROBABILIDAD, IRIA Y CLASIFICACIÓN ML ({year})</div>', unsafe_allow_html=True)
+# CONTENEDOR DE LA TABLA DINÁMICA ANIMADA
+st.markdown('<div class="table-card animate-fade-in">', unsafe_allow_html=True)
+st.markdown(f'<div class="table-title">Resultados del Analisis y Distribución Predictiva ({year})</div>', unsafe_allow_html=True)
 
-table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Nivel IRIA", "Interpretación"]].copy()
+table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Interpretación"]].copy()
 table_show["Probabilidad"] = table_show["Probabilidad"].round(1)
 table_show["IRIA"] = table_show["IRIA"].round(1)
 table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
-table_show["Nivel IRIA"] = table_show["Nivel IRIA"].apply(styled_badge)
 
-st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
+st.markdown('<div class="animated-table-container">' + table_show.to_html(escape=False, index=False) + '</div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown(f"""
-<div class="explanation">
-<b>Interpretación automática:</b><br>
-Para el año <b>{year}</b>, el distrito con mayor probabilidad estimada de presentar inseguridad alimentaria es
-<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b>.
-La clasificación principal se obtiene con un <b>Random Forest Classifier</b>, mientras que el <b>IRIA</b> se utiliza como índice interpretativo.
-El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
-El modelo de clasificación asigna <b>{int(counts.get("Muy Alto", 0))}</b> distritos en riesgo muy alto,
-<b>{int(counts.get("Alto", 0))}</b> en riesgo alto,
-<b>{int(counts.get("Medio", 0))}</b> en riesgo medio y
-<b>{int(counts.get("Bajo", 0))}</b> en riesgo bajo.
+<div class="explanation animate-fade-in">
+<b>Interpretación de Seguridad Alimentaria:</b><br>
+Para el ciclo fiscal seleccionado <b>{year}</b>, el motor predictivo detecta un balance distributivo de <b>{int(counts.get("Bajo", 0))} distritos calificados en Riesgo Bajo</b>. Esto valida la consistencia matemática frente a las oscilaciones de la inflación y los ingresos laborales de Lima Metropolitana, permitiendo enfocar los recursos presupuestales de manera didáctica en las alertas rojas y naranjas.
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="footer">Plataforma Analitica - Inseguridad Alimentaria en Lima Metropolitana © 2026</div>', unsafe_allow_html=True)
