@@ -6,6 +6,10 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.patches import Rectangle
+import seaborn as sns
 
 try:
     from reportlab.lib import colors
@@ -45,7 +49,9 @@ def load_css():
     
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #FFFFFF;
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%), 
+                    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><pattern id="pattern" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="50" cy="50" r="1" fill="%23E5E7EB"/></pattern></defs><rect width="1200" height="800" fill="url(%23pattern)"/></svg>');
+        background-attachment: fixed;
         color: #333333;
     }
     
@@ -376,7 +382,6 @@ def load_css():
         line-height: 1.5;
     }
     
-    /* Estilos para los selectbox y inputs */
     .stSelectbox, .stTextInput {
         margin-bottom: 0;
     }
@@ -409,6 +414,23 @@ def load_css():
         background-color: #0D7A54;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 73, 47, 0.3);
+    }
+    
+    .chart-card {
+        background: #FFFFFF;
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 20px 0;
+    }
+    
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     @media (max-width: 768px) {
@@ -467,6 +489,7 @@ def normalize_series(series, low=0, high=100):
     return low + (series - min_value) * (high - low) / (max_value - min_value)
 
 def clasificar_riesgo_iria(iria):
+    """Clasifica el riesgo basado en IRIA"""
     if iria >= 75:
         return "Muy Alto"
     if iria >= 55:
@@ -497,6 +520,7 @@ def styled_badge(nivel):
     return f'<span class="badge" style="background-color:{color_riesgo(nivel)};">{nivel}</span>'
 
 def calcular_iria(base):
+    """Calcula IRIA y clasifica riesgo basado en IRIA"""
     base["IRIA"] = (
         0.30 * normalize_series(base["Porcentaje_Gasto_Alimentos"], 0, 100)
         + 0.25 * normalize_series(base["Indice_Vulnerabilidad"], 0, 100)
@@ -504,6 +528,10 @@ def calcular_iria(base):
         + 0.15 * normalize_series(base["Inflacion_Alimentaria"], 0, 100)
         + 0.10 * normalize_series(base["Gasto_Alimentos"], 0, 100)
     ).clip(0, 100).round(2)
+    
+    # Clasificar riesgo basado en IRIA
+    base["Nivel de Riesgo"] = base["IRIA"].apply(clasificar_riesgo_iria)
+    
     return base
 
 @st.cache_resource
@@ -520,11 +548,9 @@ def train_models(df):
 
     y_reg = work["Probabilidad_Enfermedad_Alimentaria"]
 
-    if "Nivel_Riesgo" in work.columns:
-        work["Nivel_Riesgo_Modelo"] = work["Nivel_Riesgo"].astype(str)
-    else:
-        tmp = calcular_iria(work.copy())
-        work["Nivel_Riesgo_Modelo"] = tmp["IRIA"].apply(clasificar_riesgo_iria)
+    # Calcular IRIA y clasificación
+    work = calcular_iria(work.copy())
+    work["Nivel_Riesgo_Modelo"] = work["Nivel de Riesgo"].astype(str)
 
     class_encoder = LabelEncoder()
     y_clf = class_encoder.fit_transform(work["Nivel_Riesgo_Modelo"].astype(str))
@@ -592,10 +618,8 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
     year_shift = (year - 2024) * 0.35
     base["Probabilidad"] = (calibrated + year_shift).clip(5, 95).round(2)
 
+    # Calcular IRIA y clasificación basada en IRIA
     base = calcular_iria(base)
-
-    clf_codes = classifier.predict(X_future)
-    base["Nivel de Riesgo"] = class_encoder.inverse_transform(clf_codes)
 
     base["Interpretación"] = base["Nivel de Riesgo"].apply(interpretacion)
 
@@ -641,6 +665,63 @@ def make_pdf(year, top_high, top_low, table):
     elements.append(pdf_table)
     doc.build(elements)
     return output.getvalue()
+
+def create_top10_chart(results):
+    """Crea gráfica de Top 10 distritos con mayor riesgo"""
+    top10 = results.nlargest(10, "IRIA")[["Distrito", "IRIA"]].reset_index(drop=True)
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    colors_bar = ["#8B0000" if x >= 75 else "#F97316" if x >= 55 else "#EAB308" if x >= 35 else "#16A34A" 
+                  for x in top10["IRIA"]]
+    
+    bars = ax.barh(top10["Distrito"], top10["IRIA"], color=colors_bar, edgecolor="black", linewidth=1.2)
+    
+    # Añadir valores en las barras
+    for i, (bar, val) in enumerate(zip(bars, top10["IRIA"])):
+        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=9)
+    
+    ax.set_xlabel("Índice IRIA", fontsize=11, fontweight="bold", color="#00492F")
+    ax.set_ylabel("Distrito", fontsize=11, fontweight="bold", color="#00492F")
+    ax.set_title("Top 10 Distritos con Mayor Índice de Riesgo (IRIA)", 
+                 fontsize=12, fontweight="bold", color="#00492F", pad=20)
+    ax.set_xlim(0, 105)
+    ax.grid(axis="x", alpha=0.3, linestyle="--")
+    ax.set_facecolor("#F9FAFB")
+    fig.patch.set_facecolor("white")
+    
+    plt.tight_layout()
+    return fig
+
+def create_risk_distribution_chart(results):
+    """Crea gráfica de distribución de riesgos"""
+    risk_counts = results["Nivel de Riesgo"].value_counts()
+    colors_pie = {"Muy Alto": "#8B0000", "Alto": "#F97316", "Medio": "#EAB308", "Bajo": "#16A34A"}
+    
+    colors_list = [colors_pie.get(level, "#16A34A") for level in risk_counts.index]
+    
+    fig, ax = plt.subplots(figsize=(10, 7))
+    wedges, texts, autotexts = ax.pie(
+        risk_counts.values,
+        labels=risk_counts.index,
+        autopct="%1.1f%%",
+        colors=colors_list,
+        startangle=90,
+        textprops={"fontsize": 11, "fontweight": "bold", "color": "white"},
+        explode=[0.05 if x == "Muy Alto" else 0 for x in risk_counts.index]
+    )
+    
+    # Mejorar textos
+    for text in texts:
+        text.set_color("#00492F")
+        text.set_fontsize(11)
+        text.set_fontweight("bold")
+    
+    ax.set_title("Distribución de Distritos por Nivel de Riesgo", 
+                 fontsize=12, fontweight="bold", color="#00492F", pad=20)
+    
+    fig.patch.set_facecolor("white")
+    plt.tight_layout()
+    return fig
 
 # Cargar datos y entrenar modelos
 df = load_data()
@@ -807,6 +888,21 @@ with r3:
     </div>
     """, unsafe_allow_html=True)
 
+# 📊 GRÁFICAS
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown('<div class="chart-card">', unsafe_allow_html=True)
+st.markdown('<div class="chart-title">📈 ANÁLISIS VISUAL DE RIESGOS</div>', unsafe_allow_html=True)
+
+graph_col1, graph_col2 = st.columns(2)
+
+with graph_col1:
+    st.pyplot(create_top10_chart(results), use_container_width=True)
+
+with graph_col2:
+    st.pyplot(create_risk_distribution_chart(results), use_container_width=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
 # Table
 st.markdown('<div class="table-card">', unsafe_allow_html=True)
 st.markdown(
@@ -814,8 +910,9 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-table_show = filtered[["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]].copy()
+table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Interpretación"]].copy()
 table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
+table_show["IRIA"] = table_show["IRIA"].apply(lambda x: f"{x:.1f}")
 table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
 
 st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
@@ -826,12 +923,14 @@ st.markdown(f"""
 <div class="explanation">
 <b>Interpretación de resultados:</b><br>
 Para el año <b>{year}</b>, el distrito con mayor probabilidad estimada de presentar inseguridad alimentaria es
-<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b> de probabilidad. 
+<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b> de probabilidad e índice IRIA de <b>{top_high["IRIA"]:.1f}</b>. 
 El modelo clasifica <b>{int(counts.get("Muy Alto", 0))}</b> distritos en riesgo muy alto,
 <b>{int(counts.get("Alto", 0))}</b> en riesgo alto,
 <b>{int(counts.get("Medio", 0))}</b> en riesgo medio y
 <b>{int(counts.get("Bajo", 0))}</b> en riesgo bajo.
-El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
+El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b> e índice IRIA de <b>{top_low["IRIA"]:.1f}</b>.
+<br><br>
+<b>Nota:</b> El nivel de riesgo está determinado por el Índice IRIA (Índice de Riesgo de Inseguridad Alimentaria) que pondera factores económicos, de vulnerabilidad y alimentarios.
 </div>
 """, unsafe_allow_html=True)
 
@@ -840,3 +939,4 @@ st.markdown(
     '<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>',
     unsafe_allow_html=True
 )
+
