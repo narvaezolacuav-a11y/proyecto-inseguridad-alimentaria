@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-/* Configuración de Fondo de Ingeniería e Interactividad Global */
+/* Configuración del Entorno de Trabajo con Fondo de Ingeniería */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
 .stApp {
-    background-color: #F3F7F5;
-    /* Fondo con un patrón geométrico sutil y elegante de líneas cruzadas */
+    background-color: #F4F8F6;
+    /* Patrón didáctico estructural sutil simulando redes de distribución */
     background-image: 
-        linear-gradient(rgba(0, 77, 64, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 77, 64, 0.03) 1px, transparent 1px);
-    background-size: 24px 24px;
+        linear-gradient(rgba(0, 73, 47, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 73, 47, 0.03) 1px, transparent 1px);
+    background-size: 26px 26px;
 }
 
 .block-container {
@@ -19,232 +19,201 @@ html, body, [class*="css"] {
     padding: 2rem 3.5rem 2rem 3.5rem;
 }
 
-/* Panel de Control Lateral Premium Verde */
+/* Panel Lateral Corporativo en Verde Bosque Profundo */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #00332C 0%, #004D40 100%) !important;
-    box-shadow: 4px 0px 30px rgba(0, 43, 36, 0.15);
+    background: linear-gradient(180deg, #00271F 0%, #00492F 100%) !important;
+    box-shadow: 4px 0px 30px rgba(0, 39, 31, 0.15);
 }
 
 [data-testid="stSidebar"] * {
-    color: #F8FAFC !important;
+    color: #FFFFFF !important;
 }
 
-/* Inputs de Selección y Texto con efecto focus */
+/* Selectores y Botones de Entrada de la Sidebar */
 [data-testid="stSidebar"] div[data-baseweb="select"], 
 [data-testid="stSidebar"] div[data-baseweb="input"] {
-    background-color: #005B4F !important;
-    border: 1px solid #00796B !important;
+    background-color: #005C3C !important;
+    border: 1px solid #007D52 !important;
     border-radius: 8px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease-in-out;
 }
 
-[data-testid="stSidebar"] div[data-baseweb="select"]:hover, 
-[data-testid="stSidebar"] div[data-baseweb="input"]:focus-within {
+[data-testid="stSidebar"] div[data-baseweb="select"]:hover {
     border-color: #00E676 !important;
     box-shadow: 0 0 0 2px rgba(0, 230, 118, 0.2);
 }
 
 .sidebar-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
-    letter-spacing: -0.5px;
     color: #00E676 !important;
+    margin-top: 15px;
 }
 
 .sidebar-subtitle {
     color: #A3E2C9 !important;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 30px;
-}
-
-/* Títulos con Animación Suave */
-.main-title {
-    color: #004D40;
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: -0.8px;
-    margin-bottom: 6px;
-}
-
-.main-subtitle {
-    color: #546E7A;
-    font-size: 15px;
+    letter-spacing: 0.8px;
     margin-bottom: 25px;
 }
 
-/* Separadores con Animación de Brillo Gradual */
+/* Títulos Principales */
+.main-title-big {
+    color: #00492F;
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.8px;
+}
+
+.main-title-small {
+    color: #546E7A;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.location {
+    color: #007D52;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Separadores con Brillo Animado */
 .animated-separator {
     height: 3px;
-    background: linear-gradient(90deg, #004D40 0%, #00E676 50%, transparent 100%);
-    border-radius: 2px;
-    margin-bottom: 25px;
+    background: linear-gradient(90deg, #00492F 0%, #00E676 50%, transparent 100%);
+    margin: 20px 0;
     background-size: 200% auto;
     animation: pulseGlow 4s ease infinite;
 }
 
-/* Contenedores y Tarjetas con Elevación Dinámica (Cards) */
-.metric-card {
+/* Tarjetas Informativas con Efectos Hover Elevados */
+.kpi-card, .result-card, .table-card {
     background: #FFFFFF;
-    border: 1px solid #E0F2F1;
+    border: 1px solid #E3ECE8;
     border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 12px rgba(0, 77, 64, 0.02);
-    margin-bottom: 20px;
+    padding: 22px;
+    box-shadow: 0 4px 12px rgba(0, 73, 47, 0.02);
+    margin-bottom: 15px;
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.metric-card:hover {
+.kpi-card:hover, .result-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 77, 64, 0.08);
+    box-shadow: 0 12px 24px rgba(0, 73, 47, 0.08);
     border-color: #A7FFEB;
 }
 
-.metric-label {
-    color: #546E7A;
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.metric-value {
-    font-size: 28px;
-    font-weight: 800;
-    margin-top: 6px;
-}
-
-/* Gran Banner de Predicción */
-.pred-card {
-    background: linear-gradient(135deg, #004D40 0%, #00796B 100%);
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-    color: white !important;
-    box-shadow: 0 10px 35px rgba(0, 77, 64, 0.12);
-    margin-bottom: 25px;
-    transition: transform 0.4s ease;
-}
-
-.pred-card:hover {
-    transform: scale(1.01);
-}
-
-.pred-card h2 {
-    color: #00E676 !important;
+.kpi-title, .card-title, .table-title {
     font-size: 13px;
     font-weight: 700;
-    letter-spacing: 1.5px;
-    margin-bottom: 10px;
+    color: #00492F;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.pred-card h3 {
-    color: #FFFFFF !important;
-    font-size: 42px;
-    font-weight: 800;
-    margin: 10px 0;
-}
-
-.pred-giant-value {
-    font-size: 56px;
+.kpi-number {
+    font-size: 36px;
     font-weight: 900;
-    color: #00E676;
-    letter-spacing: -1.5px;
+    margin-top: 5px;
 }
 
-/* Estilos de Tabla Avanzados y Animaciones de Fila */
-.table-card {
-    background: #FFFFFF;
-    border: 1px solid #E0F2F1;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 12px rgba(0, 77, 64, 0.02);
-    margin-bottom: 20px;
+.kpi-sub {
+    font-size: 11px;
+    color: #78909C;
 }
 
-.table-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #004D40;
-    margin-bottom: 16px;
-    text-transform: uppercase;
+.pred-district, .low-district {
+    font-size: 26px;
+    font-weight: 800;
+    color: #00492F;
 }
 
+.pred-value { font-size: 38px; font-weight: 900; color: #F97316; }
+.low-value { font-size: 38px; font-weight: 900; color: #2E7D32; }
+
+/* Barras de Progreso Interactivas */
+.progress {
+    background-color: #ECEFF1;
+    height: 6px;
+    border-radius: 3px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+.progress-fill { background: #F97316; height: 100%; }
+.progress-fill-green { background: #2E7D32; height: 100%; }
+
+/* Contenedor y Efectos Dinámicos de Filas en Tablas */
 .animated-table-container table {
     width: 100%;
     border-collapse: collapse;
 }
 
 .animated-table-container th {
-    background-color: #E0F2F1 !important;
-    color: #004D40 !important;
+    background-color: #E8F5E9 !important;
+    color: #00492F !important;
     font-weight: 700 !important;
-    padding: 14px 18px !important;
+    padding: 12px 16px !important;
     font-size: 13px;
-    border-bottom: 2px solid #B2DFDB !important;
+    border-bottom: 2px solid #C8E6C9 !important;
 }
 
 .animated-table-container tr {
-    transition: background-color 0.25s ease, transform 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-/* Efecto reactivo al pasar el mouse sobre las filas de los distritos */
+/* Efecto didáctico: Las filas se iluminan e incrementan su enfoque al pasar el mouse */
 .animated-table-container tr:hover {
-    background-color: #F1FBF8 !important;
-    transform: scale(1.002);
+    background-color: #F1FBF7 !important;
+    cursor: pointer;
 }
 
 .animated-table-container td {
-    padding: 14px 18px !important;
-    font-size: 14px;
+    padding: 12px 16px !important;
+    font-size: 13px;
     color: #37474F;
-    border-bottom: 1px solid #E0F2F1 !important;
+    border-bottom: 1px solid #E8F5E9 !important;
 }
 
-/* Badges de Riesgo Redondeados */
+/* Badges Redondeados */
 .badge {
     display: inline-block;
-    border-radius: 9999px;
-    padding: 4px 16px;
+    border-radius: 20px;
+    padding: 4px 14px;
     color: white !important;
     font-weight: 700;
     font-size: 11px;
-    text-align: center;
-    letter-spacing: 0.5px;
 }
 
-/* Bloque Informativo de Explicación */
+/* Explicaciones Didácticas */
 .explanation {
-    background-color: #E0F2F1;
-    border-left: 5px solid #004D40;
+    background-color: #E8F5E9;
+    border-left: 5px solid #00492F;
     border-radius: 8px;
-    padding: 20px;
-    color: #004D40;
-    font-size: 14px;
+    padding: 18px;
+    color: #00492F;
+    font-size: 13.5px;
     line-height: 1.6;
 }
 
-/* Botones de Descarga con Transiciones Fluidas de Gradiente */
+/* Botones con Efecto de Gradiente Fluido */
 div.stButton > button, .stDownloadButton button {
-    background: linear-gradient(90deg, #00796B 0%, #004D40 100%) !important;
+    background: linear-gradient(90deg, #007D52 0%, #00492F 100%) !important;
     color: white !important;
     border: none !important;
     border-radius: 8px !important;
-    height: 46px;
     font-weight: 600 !important;
-    font-size: 14px !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 4px 10px rgba(0, 77, 64, 0.1);
 }
 
 div.stButton > button:hover, .stDownloadButton button:hover {
-    background: linear-gradient(90deg, #009688 0%, #00796B 100%) !important;
+    background: linear-gradient(90deg, #009E68 0%, #007D52 100%) !important;
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 121, 107, 0.25);
+    box-shadow: 0 6px 15px rgba(0, 125, 82, 0.2);
 }
 
 /* =========================================================
-   DEFINICIÓN DE ANIMACIONES (KEYFRAMES)
+   ANIMACIONES DE ENTRADA
    ========================================================= */
 @keyframes pulseGlow {
     0% { background-position: 0% 50%; }
@@ -252,29 +221,21 @@ div.stButton > button:hover, .stDownloadButton button:hover {
     100% { background-position: 0% 50%; }
 }
 
-.animate-slide-down {
-    animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
+.animate-slide-down { animation: slideDown 0.5s ease out both; }
+.animate-fade-in { animation: fadeIn 0.7s ease out both; }
 
-.animate-fade-in {
-    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* Efecto cascada secuencial para las métricas de arriba */
-.animate-card-1 { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
-.animate-card-2 { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
-.animate-card-3 { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+.animate-card-1 { animation: slideUp 0.4s ease out 0.1s both; }
+.animate-card-2 { animation: slideUp 0.4s ease out 0.2s both; }
+.animate-card-3 { animation: slideUp 0.4s ease out 0.3s both; }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
+    from { opacity: 0; transform: translateY(-15px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
