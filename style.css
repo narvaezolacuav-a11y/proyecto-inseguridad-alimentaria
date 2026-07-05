@@ -1,32 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
-html,body,[class*="css"]{font-family:'Manrope',sans-serif}
-.stApp{background:#F6FAF5}
+html,body,[class*="css"]{font-family:'Manrope',sans-serif}.stApp{background:#F6FAF5}
 .block-container{max-width:100%;padding:1.2rem 2rem 1rem 2rem}
-[data-testid="stSidebar"]{background:linear-gradient(180deg,#003B2D 0%,#00492F 58%,#00251E 100%)}
-[data-testid="stSidebar"] *{color:#fff!important}
-.sidebar-title{font-size:29px;font-weight:900;line-height:1.05;margin-top:26px;margin-bottom:8px}
-.sidebar-subtitle{color:#6BE37C!important;font-size:14px;font-weight:900;letter-spacing:.8px;margin-bottom:34px}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#003B2D 0%,#00492F 58%,#00251E 100%)}[data-testid="stSidebar"] *{color:#fff!important}
+.sidebar-title{font-size:29px;font-weight:900;line-height:1.05;margin-top:26px;margin-bottom:8px}.sidebar-subtitle{color:#6BE37C!important;font-size:14px;font-weight:900;letter-spacing:.8px;margin-bottom:34px}
 .side-item-active{background:linear-gradient(90deg,#10B64A,#087A35);border-radius:12px;padding:13px 17px;margin:11px 0;font-weight:900;box-shadow:0 8px 20px rgba(16,182,74,.24)}
-.side-item{padding:12px 17px;margin:8px 0;font-weight:700;opacity:.95}
-.side-divider{height:1px;background:rgba(255,255,255,.22);margin:26px 0}
+.side-item{padding:12px 17px;margin:8px 0;font-weight:700;opacity:.95}.side-divider{height:1px;background:rgba(255,255,255,.22);margin:26px 0}
 .side-footer{position:fixed;bottom:25px;width:210px;font-size:12px;line-height:1.75;color:#E8FFF0!important;opacity:.92}
-.main-title-small{color:#0A1628;font-size:30px;font-weight:900;line-height:1;margin-bottom:0}
-.main-title-big{color:#087A35;font-size:45px;font-weight:900;line-height:1.05;margin-top:-2px;margin-bottom:5px}
-.location{color:#566173;font-size:18px;font-weight:500}
+.main-title-small{color:#0A1628;font-size:30px;font-weight:900;line-height:1}.main-title-big{color:#087A35;font-size:45px;font-weight:900;line-height:1.05;margin-top:-2px;margin-bottom:5px}.location{color:#566173;font-size:18px;font-weight:500}
 .control-panel,.result-card,.table-card,.explanation,.kpi-card{background:#fff;border:1px solid #E1E8E3;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.065);animation:fadeUp .65s ease}
 .control-panel{padding:18px;margin-top:22px}.result-card{padding:23px;min-height:238px;margin-top:18px}.table-card{padding:22px;margin-top:18px}.kpi-card{padding:18px;min-height:105px;margin-top:18px}
 .label{font-size:12px;font-weight:900;color:#101827;margin-bottom:7px}.card-title,.table-title{font-size:18px;font-weight:900;color:#00492F;margin-bottom:18px}
-.year-badge{background:#006137;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}.year-badge-red{background:#B00000;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}
+.year-badge{background:#006137;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}.year-badge-red{background:#8B0000;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}
 .prediction-box{border:1px solid #A9D9B5;background:linear-gradient(180deg,#F2FFF4,#E9F9EB);border-radius:11px;padding:22px;text-align:center}.low-box{border:1px solid #F3B5B5;background:linear-gradient(180deg,#FFF7F7,#FFF0F0);border-radius:11px;padding:22px;text-align:center}
-.pred-district{font-size:25px;font-weight:900;color:#00492F;text-transform:uppercase;margin-bottom:6px}.low-district{font-size:25px;font-weight:900;color:#B00000;text-transform:uppercase;margin-bottom:6px}
-.pred-label{color:#263241;font-size:14px;font-weight:600}.pred-value{font-size:42px;font-weight:900;color:#008231;line-height:1;margin-top:8px}.low-value{font-size:42px;font-weight:900;color:#B00000;line-height:1;margin-top:8px}
-.progress{height:8px;border-radius:999px;background:#DDE8E0;margin-top:15px;overflow:hidden}.progress-fill{height:8px;border-radius:999px;background:linear-gradient(90deg,#087A35,#10B64A)}.progress-fill-red{height:8px;border-radius:999px;background:linear-gradient(90deg,#B00000,#F87171)}
-.kpi-title{font-size:13px;font-weight:800;color:#334155}.kpi-number{font-size:34px;font-weight:900;color:#00492F;line-height:1.1}.kpi-sub{font-size:13px;font-weight:700;color:#64748B}
-.risk-box{border-radius:10px;padding:24px 15px;text-align:center;min-height:115px}.risk-title{font-size:15px;font-weight:900;margin-bottom:11px}.risk-range{font-size:20px;font-weight:700;color:#101827}
+.pred-district{font-size:25px;font-weight:900;color:#00492F;text-transform:uppercase}.low-district{font-size:25px;font-weight:900;color:#8B0000;text-transform:uppercase}
+.pred-label{color:#263241;font-size:14px;font-weight:600}.pred-value{font-size:42px;font-weight:900;color:#008231;line-height:1;margin-top:8px}.low-value{font-size:42px;font-weight:900;color:#8B0000;line-height:1;margin-top:8px}
+.progress{height:8px;border-radius:999px;background:#DDE8E0;margin-top:15px;overflow:hidden}.progress-fill{height:8px;border-radius:999px;background:linear-gradient(90deg,#087A35,#10B64A)}.progress-fill-red{height:8px;border-radius:999px;background:linear-gradient(90deg,#8B0000,#F87171)}
+.kpi-title{font-size:13px;font-weight:800;color:#334155}.kpi-number{font-size:34px;font-weight:900;color:#00492F}.kpi-sub{font-size:13px;font-weight:700;color:#64748B}
 .badge{display:inline-block;border-radius:6px;padding:4px 12px;color:white;font-weight:800;font-size:12px;min-width:70px;text-align:center}
 .explanation{background:#F2FFF4;border-left:6px solid #087A35;padding:16px 18px;margin-top:18px;color:#142033;font-weight:500;line-height:1.6}
-div.stButton>button{background:linear-gradient(90deg,#00492F,#006137);color:white;border:none;border-radius:10px;height:50px;font-weight:900;width:100%;transition:.2s ease}
-div.stButton>button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,73,47,.25)}.stDownloadButton button{border-radius:10px!important;height:48px!important;font-weight:900!important;border:1px solid #B5D8BE!important}
+.stDownloadButton button{border-radius:10px!important;height:48px!important;font-weight:900!important;border:1px solid #B5D8BE!important}
 .footer{background:#00552F;color:white;text-align:center;padding:13px;margin-top:20px;font-size:15px;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:14px}th{background:#00492F;color:#fff;text-align:left;padding:10px;border:1px solid #DCE8DF}td{padding:9px;border:1px solid #E5E7EB;color:#142033}tr:nth-child(even){background:#FAFCFA}tr:hover{background:#F2FFF4}
 @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
