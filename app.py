@@ -7,9 +7,9 @@ from sklearn.metrics import accuracy_score, mean_absolute_error, r2_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import Rectangle
 import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
 
 try:
     from reportlab.lib import colors
@@ -698,61 +698,122 @@ def make_pdf(year, top_high, top_low, table):
     doc.build(elements)
     return output.getvalue()
 
-def create_top10_chart(results):
-    """Crea gráfica de Top 10 distritos con mayor riesgo"""
+def create_top10_chart_plotly(results):
+    """Crea gráfica animada de Top 10 distritos con Plotly"""
     top10 = results.nlargest(10, "IRIA")[["Distrito", "IRIA"]].reset_index(drop=True)
+    top10 = top10.sort_values("IRIA", ascending=True)  # Invertir para que sea ascendente
     
-    fig, ax = plt.subplots(figsize=(5.5, 4.5))
-    colors_bar = ["#8B0000" if x >= 75 else "#F97316" if x >= 55 else "#EAB308" if x >= 35 else "#16A34A" 
-                  for x in top10["IRIA"]]
+    colors_map = {
+        "Muy Alto": "#8B0000",
+        "Alto": "#F97316",
+        "Medio": "#EAB308",
+        "Bajo": "#16A34A"
+    }
     
-    bars = ax.barh(top10["Distrito"], top10["IRIA"], color=colors_bar, edgecolor="black", linewidth=1.2)
+    # Obtener el nivel de riesgo para cada distrito
+    risk_levels = []
+    for dist in top10["Distrito"]:
+        risk = results[results["Distrito"] == dist]["Nivel de Riesgo"].values[0]
+        risk_levels.append(risk)
     
-    # Añadir valores en las barras
-    for i, (bar, val) in enumerate(zip(bars, top10["IRIA"])):
-        ax.text(val + 1, i, f"{val:.1f}", va="center", fontweight="bold", fontsize=7)
+    colors_bar = [colors_map.get(level, "#16A34A") for level in risk_levels]
     
-    ax.set_xlabel("Índice IRIA", fontsize=9, fontweight="bold", color="#00492F")
-    ax.set_ylabel("Distrito", fontsize=9, fontweight="bold", color="#00492F")
-    ax.set_title("Top 10 Distritos - Mayor Riesgo", 
-                 fontsize=10, fontweight="bold", color="#00492F", pad=12)
-    ax.set_xlim(0, 105)
-    ax.grid(axis="x", alpha=0.3, linestyle="--")
-    ax.set_facecolor("#F9FAFB")
-    fig.patch.set_facecolor("white")
+    fig = go.Figure()
     
-    plt.tight_layout()
-    return fig
-
-def create_risk_distribution_chart(results):
-    """Crea gráfica de distribución de riesgos"""
-    risk_counts = results["Nivel de Riesgo"].value_counts()
-    colors_pie = {"Muy Alto": "#8B0000", "Alto": "#F97316", "Medio": "#EAB308", "Bajo": "#16A34A"}
+    fig.add_trace(go.Bar(
+        y=top10["Distrito"],
+        x=top10["IRIA"],
+        orientation='h',
+        marker=dict(
+            color=colors_bar,
+            line=dict(color='black', width=1.5)
+        ),
+        text=top10["IRIA"].round(1),
+        textposition='outside',
+        hovertemplate='<b>%{y}</b><br>IRIA: %{x:.1f}<extra></extra>',
+        name="IRIA"
+    ))
     
-    colors_list = [colors_pie.get(level, "#16A34A") for level in risk_counts.index]
-    
-    fig, ax = plt.subplots(figsize=(5.5, 4.5))
-    wedges, texts, autotexts = ax.pie(
-        risk_counts.values,
-        labels=risk_counts.index,
-        autopct="%1.1f%%",
-        colors=colors_list,
-        startangle=90,
-        textprops={"fontsize": 9, "fontweight": "bold", "color": "white"},
-        explode=[0.05 if x == "Muy Alto" else 0 for x in risk_counts.index]
+    fig.update_layout(
+        title={
+            'text': "Top 10 Distritos - Mayor Riesgo",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 16, 'color': '#00492F', 'family': 'Arial Black'}
+        },
+        xaxis=dict(
+            title="Índice IRIA",
+            titlefont=dict(size=11, color='#00492F', family='Arial Black'),
+            tickfont=dict(size=9),
+            range=[0, 105]
+        ),
+        yaxis=dict(
+            title="",
+            tickfont=dict(size=9),
+        ),
+        height=450,
+        margin=dict(l=120, r=50, t=80, b=50),
+        plot_bgcolor='#F9FAFB',
+        paper_bgcolor='white',
+        hovermode='closest',
+        showlegend=False,
+        transition=dict(duration=500, easing='cubic-in-out')
     )
     
-    # Mejorar textos
-    for text in texts:
-        text.set_color("#00492F")
-        text.set_fontsize(9)
-        text.set_fontweight("bold")
+    return fig
+
+def create_risk_distribution_chart_plotly(results):
+    """Crea gráfica animada de distribución de riesgos con Plotly"""
+    risk_counts = results["Nivel de Riesgo"].value_counts()
     
-    ax.set_title("Distribución de Riesgos", 
-                 fontsize=10, fontweight="bold", color="#00492F", pad=12)
+    # Asegurar el orden correcto
+    order = ["Muy Alto", "Alto", "Medio", "Bajo"]
+    risk_counts = risk_counts.reindex([x for x in order if x in risk_counts.index])
     
-    fig.patch.set_facecolor("white")
-    plt.tight_layout()
+    colors_map = {
+        "Muy Alto": "#8B0000",
+        "Alto": "#F97316",
+        "Medio": "#EAB308",
+        "Bajo": "#16A34A"
+    }
+    
+    colors_list = [colors_map.get(level, "#16A34A") for level in risk_counts.index]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Pie(
+        labels=risk_counts.index,
+        values=risk_counts.values,
+        marker=dict(colors=colors_list, line=dict(color='white', width=2)),
+        textposition='inside',
+        textinfo='label+percent',
+        hovertemplate='<b>%{label}</b><br>Distritos: %{value}<br>Porcentaje: %{percent}<extra></extra>',
+        pull=[0.1 if x == "Muy Alto" else 0 for x in risk_counts.index]
+    ))
+    
+    fig.update_layout(
+        title={
+            'text': "Distribución de Riesgos",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 16, 'color': '#00492F', 'family': 'Arial Black'}
+        },
+        height=450,
+        margin=dict(l=10, r=10, t=80, b=10),
+        paper_bgcolor='white',
+        font=dict(size=10, color='white', family='Arial'),
+        showlegend=True,
+        legend=dict(
+            x=1.0,
+            y=0.5,
+            font=dict(size=9),
+            bgcolor='rgba(255,255,255,0.8)',
+            bordercolor='#E5E7EB',
+            borderwidth=1
+        ),
+        transition=dict(duration=500, easing='cubic-in-out')
+    )
+    
     return fig
 
 # Cargar datos y entrenar modelos
@@ -944,14 +1005,18 @@ with table_col:
     st.markdown(html_table, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# GRÁFICAS DINÁMICAS
+# GRÁFICAS DINÁMICAS CON PLOTLY
 with charts_col:
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     st.markdown('<div class="chart-title">📊 ANÁLISIS VISUAL</div>', unsafe_allow_html=True)
     
-    # Las gráficas se actualizan automáticamente cuando cambia el año
-    st.pyplot(create_top10_chart(results), use_container_width=True)
-    st.pyplot(create_risk_distribution_chart(results), use_container_width=True)
+    # Gráfica de Top 10 animada
+    fig_top10 = create_top10_chart_plotly(results)
+    st.plotly_chart(fig_top10, use_container_width=True, config={'responsive': True})
+    
+    # Gráfica de distribución animada
+    fig_risk = create_risk_distribution_chart_plotly(results)
+    st.plotly_chart(fig_risk, use_container_width=True, config={'responsive': True})
     
     st.markdown('</div>', unsafe_allow_html=True)
 
