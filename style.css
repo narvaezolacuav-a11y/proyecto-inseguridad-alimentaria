@@ -1,179 +1,32 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* Configuración General y de Fuentes Modernas */
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-.stApp {
-    background-color: #F8FAFC; /* Fondo Gris Azulado muy Claro y Limpio */
-}
-
-.block-container {
-    max-width: 100%;
-    padding: 2.5rem 4rem 2.5rem 4rem;
-}
-
-/* Barra Lateral Estilo Corporativo Premium */
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%) !important; /* Azul Ejecutivo Profundo */
-    box-shadow: 4px 0px 20px rgba(0, 0, 0, 0.06);
-}
-
-[data-testid="stSidebar"] * {
-    color: #F8FAFC !important;
-}
-
-.sidebar-title {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: #38BDF8 !important; /* Azul Acero Luminoso para Acento */
-    margin-top: 15px;
-}
-
-.sidebar-subtitle {
-    color: #94A3B8 !important;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    margin-bottom: 25px;
-}
-
-/* Estilo para los Títulos de la Sección Principal */
-.main-title {
-    color: #0F172A;
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: -0.8px;
-    margin-bottom: 6px;
-}
-
-.main-subtitle {
-    color: #64748B;
-    font-size: 15px;
-    font-weight: 400;
-    margin-bottom: 30px;
-}
-
-/* Tarjetas Informativas Generales (Cards) */
-.metric-card, .table-card {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 22px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
-    margin-bottom: 18px;
-}
-
-/* Tarjeta Principal de Predicción de Riesgo */
-.pred-card {
-    background: linear-gradient(135deg, #1E3A8A 0%, #0F172A 100%);
-    border-radius: 14px;
-    padding: 35px;
-    text-align: center;
-    color: #FFFFFF !important;
-    box-shadow: 0 10px 25px -5px rgba(30, 58, 138, 0.2);
-    margin-bottom: 25px;
-}
-
-.pred-card h2 {
-    color: #38BDF8 !important; /* Resalte en Azul Claro */
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-.pred-card h3 {
-    color: #FFFFFF !important;
-    font-size: 38px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    margin: 12px 0;
-}
-
-.pred-value {
-    font-size: 52px;
-    font-weight: 900;
-    color: #38BDF8;
-    letter-spacing: -1px;
-}
-
-/* Estilización Avanzada de Tablas HTML nativas en Streamlit */
-.table-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0F172A;
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-th {
-    background-color: #F1F5F9 !important;
-    color: #475569 !important;
-    font-weight: 700 !important;
-    text-align: left !important;
-    padding: 12px 16px !important;
-    font-size: 13px;
-    border-bottom: 2px solid #E2E8F0 !important;
-}
-
-td {
-    padding: 14px 16px !important;
-    font-size: 14px;
-    color: #334155;
-    border-bottom: 1px solid #F1F5F9 !important;
-}
-
-/* Badges Profesionales Redondeados para los Semáforos de Riesgo */
-.badge {
-    display: inline-block;
-    border-radius: 9999px;
-    padding: 4px 14px;
-    color: #FFFFFF !important;
-    font-weight: 700;
-    font-size: 11px;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
-
-/* Bloque Inferior de Interpretación Textual */
-.explanation {
-    background-color: #F1F5F9;
-    border-left: 5px solid #2563EB; /* Línea de acento Azul */
-    border-radius: 6px;
-    padding: 18px 22px;
-    color: #334155;
-    font-size: 14px;
-    line-height: 1.6;
-    margin-top: 20px;
-}
-
-/* Botones de Descarga y Acciones Sólidos */
-div.stButton > button, .stDownloadButton button {
-    background-color: #2563EB !important; /* Azul Corporativo */
-    color: #FFFFFF !important;
-    border: none !important;
-    border-radius: 8px !important;
-    height: 46px;
-    font-weight: 600 !important;
-    font-size: 14px !important;
-    transition: all 0.2s ease-in-out;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.12);
-}
-
-div.stButton > button:hover, .stDownloadButton button:hover {
-    background-color: #1D4ED8 !important; /* Azul más Intenso */
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.2);
-}
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap');
+html,body,[class*="css"]{font-family:'Manrope',sans-serif}
+.stApp{background:#F6FAF5}
+.block-container{max-width:100%;padding:1.2rem 2rem 1rem 2rem}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#003B2D 0%,#00492F 58%,#00251E 100%)}
+[data-testid="stSidebar"] *{color:#fff!important}
+.sidebar-title{font-size:29px;font-weight:900;line-height:1.05;margin-top:26px;margin-bottom:8px}
+.sidebar-subtitle{color:#6BE37C!important;font-size:14px;font-weight:900;letter-spacing:.8px;margin-bottom:34px}
+.side-item-active{background:linear-gradient(90deg,#10B64A,#087A35);border-radius:12px;padding:13px 17px;margin:11px 0;font-weight:900;box-shadow:0 8px 20px rgba(16,182,74,.24)}
+.side-item{padding:12px 17px;margin:8px 0;font-weight:700;opacity:.95}
+.side-divider{height:1px;background:rgba(255,255,255,.22);margin:26px 0}
+.side-footer{position:fixed;bottom:25px;width:210px;font-size:12px;line-height:1.75;color:#E8FFF0!important;opacity:.92}
+.main-title-small{color:#0A1628;font-size:30px;font-weight:900;line-height:1;margin-bottom:0}
+.main-title-big{color:#087A35;font-size:45px;font-weight:900;line-height:1.05;margin-top:-2px;margin-bottom:5px}
+.location{color:#566173;font-size:18px;font-weight:500}
+.control-panel,.result-card,.table-card,.explanation,.kpi-card{background:#fff;border:1px solid #E1E8E3;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.065);animation:fadeUp .65s ease}
+.control-panel{padding:18px;margin-top:22px}.result-card{padding:23px;min-height:238px;margin-top:18px}.table-card{padding:22px;margin-top:18px}.kpi-card{padding:18px;min-height:105px;margin-top:18px}
+.label{font-size:12px;font-weight:900;color:#101827;margin-bottom:7px}.card-title,.table-title{font-size:18px;font-weight:900;color:#00492F;margin-bottom:18px}
+.year-badge{background:#006137;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}.year-badge-red{background:#B00000;color:white;border-radius:7px;padding:5px 12px;font-size:14px;font-weight:900;margin-left:8px}
+.prediction-box{border:1px solid #A9D9B5;background:linear-gradient(180deg,#F2FFF4,#E9F9EB);border-radius:11px;padding:22px;text-align:center}.low-box{border:1px solid #F3B5B5;background:linear-gradient(180deg,#FFF7F7,#FFF0F0);border-radius:11px;padding:22px;text-align:center}
+.pred-district{font-size:25px;font-weight:900;color:#00492F;text-transform:uppercase;margin-bottom:6px}.low-district{font-size:25px;font-weight:900;color:#B00000;text-transform:uppercase;margin-bottom:6px}
+.pred-label{color:#263241;font-size:14px;font-weight:600}.pred-value{font-size:42px;font-weight:900;color:#008231;line-height:1;margin-top:8px}.low-value{font-size:42px;font-weight:900;color:#B00000;line-height:1;margin-top:8px}
+.progress{height:8px;border-radius:999px;background:#DDE8E0;margin-top:15px;overflow:hidden}.progress-fill{height:8px;border-radius:999px;background:linear-gradient(90deg,#087A35,#10B64A)}.progress-fill-red{height:8px;border-radius:999px;background:linear-gradient(90deg,#B00000,#F87171)}
+.kpi-title{font-size:13px;font-weight:800;color:#334155}.kpi-number{font-size:34px;font-weight:900;color:#00492F;line-height:1.1}.kpi-sub{font-size:13px;font-weight:700;color:#64748B}
+.risk-box{border-radius:10px;padding:24px 15px;text-align:center;min-height:115px}.risk-title{font-size:15px;font-weight:900;margin-bottom:11px}.risk-range{font-size:20px;font-weight:700;color:#101827}
+.badge{display:inline-block;border-radius:6px;padding:4px 12px;color:white;font-weight:800;font-size:12px;min-width:70px;text-align:center}
+.explanation{background:#F2FFF4;border-left:6px solid #087A35;padding:16px 18px;margin-top:18px;color:#142033;font-weight:500;line-height:1.6}
+div.stButton>button{background:linear-gradient(90deg,#00492F,#006137);color:white;border:none;border-radius:10px;height:50px;font-weight:900;width:100%;transition:.2s ease}
+div.stButton>button:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,73,47,.25)}.stDownloadButton button{border-radius:10px!important;height:48px!important;font-weight:900!important;border:1px solid #B5D8BE!important}
+.footer{background:#00552F;color:white;text-align:center;padding:13px;margin-top:20px;font-size:15px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}th{background:#00492F;color:#fff;text-align:left;padding:10px;border:1px solid #DCE8DF}td{padding:9px;border:1px solid #E5E7EB;color:#142033}tr:nth-child(even){background:#FAFCFA}tr:hover{background:#F2FFF4}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
