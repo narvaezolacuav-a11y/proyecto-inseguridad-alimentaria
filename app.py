@@ -16,13 +16,428 @@ try:
 except Exception:
     REPORTLAB_OK = False
 
-st.set_page_config(page_title="Inseguridad Alimentaria", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="Inseguridad Alimentaria",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 DATASET = "Entregable_3_Dataset_Transformado_Inseguridad_Alimentaria.xlsx"
 
 def load_css():
-    css_path = Path("assets/style.css")
-    if css_path.exists():
-        st.markdown(f"<style>{css_path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+    """Cargar estilos CSS personalizados"""
+    css_content = """
+    <style>
+    :root {
+        --primary-color: #00492F;
+        --secondary-color: #F97316;
+        --success-color: #16A34A;
+        --warning-color: #EAB308;
+        --danger-color: #8B0000;
+        --light-bg: #F5F5F5;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #FFFFFF;
+        color: #333333;
+    }
+    
+    .main-title-big {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        margin: 10px 0;
+        letter-spacing: -0.5px;
+    }
+    
+    .main-title-small {
+        font-size: 0.9rem;
+        color: #666666;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    
+    .location {
+        font-size: 1rem;
+        color: #999999;
+        margin-top: 5px;
+    }
+    
+    .control-panel {
+        background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin: 25px 0;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .kpi-card {
+        background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color);
+    }
+    
+    .kpi-title {
+        font-size: 0.85rem;
+        color: #666666;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    
+    .kpi-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        line-height: 1;
+    }
+    
+    .kpi-sub {
+        font-size: 0.7rem;
+        color: #999999;
+        margin-top: 8px;
+        font-weight: 500;
+    }
+    
+    .result-card {
+        background: #FFFFFF;
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 24px;
+        margin: 15px 0;
+    }
+    
+    .card-title {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 15px;
+    }
+    
+    .prediction-box {
+        background: linear-gradient(135deg, #F0F9FF 0%, #F5FAFB 100%);
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .low-box {
+        background: linear-gradient(135deg, #FEF2F2 0%, #FAF5F5 100%);
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 4px solid var(--danger-color);
+    }
+    
+    .pred-district {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 10px 0;
+    }
+    
+    .low-district {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--danger-color);
+        margin: 10px 0;
+    }
+    
+    .pred-label {
+        font-size: 0.8rem;
+        color: #666666;
+        margin: 10px 0 5px 0;
+        font-weight: 500;
+    }
+    
+    .pred-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        margin: 8px 0;
+    }
+    
+    .low-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--danger-color);
+        margin: 8px 0;
+    }
+    
+    .year-badge {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .year-badge-red {
+        background-color: var(--danger-color);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .progress {
+        width: 100%;
+        height: 8px;
+        background-color: #E5E7EB;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 15px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color) 0%, #0D7A54 100%);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-fill-red {
+        height: 100%;
+        background: linear-gradient(90deg, var(--danger-color) 0%, #B91C1C 100%);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: white;
+        text-align: center;
+    }
+    
+    .table-card {
+        background: #FFFFFF;
+        border: 2px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 30px 0;
+        overflow-x: auto;
+    }
+    
+    .table-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table-card table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .table-card th {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        border: none;
+    }
+    
+    .table-card td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #E5E7EB;
+        color: #333333;
+    }
+    
+    .table-card tr:hover {
+        background-color: #F9FAFB;
+    }
+    
+    .table-card tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .explanation {
+        background: linear-gradient(135deg, #F0F9FF 0%, #F5FAFB 100%);
+        border-left: 4px solid var(--primary-color);
+        padding: 20px;
+        border-radius: 8px;
+        margin: 30px 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #333333;
+    }
+    
+    .explanation b {
+        color: var(--primary-color);
+    }
+    
+    .footer {
+        text-align: center;
+        color: #999999;
+        font-size: 0.85rem;
+        padding: 30px 0;
+        border-top: 1px solid #E5E7EB;
+        margin-top: 50px;
+    }
+    
+    .sidebar-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        text-align: center;
+        line-height: 1.3;
+        margin-bottom: 5px;
+    }
+    
+    .sidebar-subtitle {
+        text-align: center;
+        color: #666666;
+        font-size: 0.8rem;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .side-item-active {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 10px;
+        border-radius: 6px;
+        margin: 8px 0;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .side-item {
+        padding: 10px;
+        color: #666666;
+        margin: 8px 0;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    
+    .side-item:hover {
+        background-color: #F3F4F6;
+        color: var(--primary-color);
+    }
+    
+    .side-divider {
+        height: 1px;
+        background-color: #E5E7EB;
+        margin: 15px 0;
+    }
+    
+    .side-footer {
+        text-align: center;
+        color: #999999;
+        font-size: 0.75rem;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #E5E7EB;
+        line-height: 1.5;
+    }
+    
+    /* Estilos para los selectbox y inputs */
+    .stSelectbox, .stTextInput {
+        margin-bottom: 0;
+    }
+    
+    .stSelectbox [data-baseweb="select"] {
+        background-color: #FFFFFF;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+    }
+    
+    .stTextInput input {
+        background-color: #FFFFFF;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        padding: 10px;
+    }
+    
+    .stDownloadButton > button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #0D7A54;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 73, 47, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+        .main-title-big {
+            font-size: 2rem;
+        }
+        
+        .kpi-number {
+            font-size: 2rem;
+        }
+        
+        .pred-district {
+            font-size: 1.4rem;
+        }
+        
+        .table-card {
+            padding: 15px;
+        }
+        
+        .table-card th,
+        .table-card td {
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+    }
+    </style>
+    """
+    st.markdown(css_content, unsafe_allow_html=True)
+
 load_css()
 
 @st.cache_data
@@ -32,7 +447,12 @@ def load_data():
         st.error(f"No se encontró el archivo {DATASET}. Debe estar en la misma carpeta que app.py.")
         st.stop()
     df = pd.read_excel(path)
-    required = ["Distrito","Año","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad","Probabilidad_Enfermedad_Alimentaria"]
+    required = [
+        "Distrito", "Año", "Ingreso_Laboral", "Gasto_Alimentos",
+        "Inflacion_Alimentaria", "Integrantes_Hogar",
+        "Porcentaje_Gasto_Alimentos", "Indice_Vulnerabilidad",
+        "Probabilidad_Enfermedad_Alimentaria"
+    ]
     missing = [col for col in required if col not in df.columns]
     if missing:
         st.error("Faltan columnas obligatorias en el dataset: " + ", ".join(missing))
@@ -56,19 +476,25 @@ def clasificar_riesgo_iria(iria):
     return "Bajo"
 
 def interpretacion(nivel):
-    if nivel == "Muy Alto":
-        return "Probabilidad muy alta de presentar inseguridad alimentaria."
-    if nivel == "Alto":
-        return "Probabilidad alta de presentar inseguridad alimentaria."
-    if nivel == "Medio":
-        return "Probabilidad media de presentar inseguridad alimentaria."
-    return "Probabilidad baja de presentar inseguridad alimentaria."
+    interpretaciones = {
+        "Muy Alto": "Probabilidad muy alta de presentar inseguridad alimentaria.",
+        "Alto": "Probabilidad alta de presentar inseguridad alimentaria.",
+        "Medio": "Probabilidad media de presentar inseguridad alimentaria.",
+        "Bajo": "Probabilidad baja de presentar inseguridad alimentaria."
+    }
+    return interpretaciones.get(nivel, "")
 
 def color_riesgo(nivel):
-    return {"Muy Alto":"#8B0000","Alto":"#F97316","Medio":"#EAB308","Bajo":"#16A34A"}.get(nivel,"#16A34A")
+    colores = {
+        "Muy Alto": "#8B0000",
+        "Alto": "#F97316",
+        "Medio": "#EAB308",
+        "Bajo": "#16A34A"
+    }
+    return colores.get(nivel, "#16A34A")
 
 def styled_badge(nivel):
-    return f'<span class="badge" style="background:{color_riesgo(nivel)};">{nivel}</span>'
+    return f'<span class="badge" style="background-color:{color_riesgo(nivel)};">{nivel}</span>'
 
 def calcular_iria(base):
     base["IRIA"] = (
@@ -86,7 +512,11 @@ def train_models(df):
     district_encoder = LabelEncoder()
     work["Distrito_Cod"] = district_encoder.fit_transform(work["Distrito"].astype(str))
 
-    features = ["Año","Distrito_Cod","Ingreso_Laboral","Gasto_Alimentos","Inflacion_Alimentaria","Integrantes_Hogar","Porcentaje_Gasto_Alimentos","Indice_Vulnerabilidad"]
+    features = [
+        "Año", "Distrito_Cod", "Ingreso_Laboral", "Gasto_Alimentos",
+        "Inflacion_Alimentaria", "Integrantes_Hogar",
+        "Porcentaje_Gasto_Alimentos", "Indice_Vulnerabilidad"
+    ]
 
     y_reg = work["Probabilidad_Enfermedad_Alimentaria"]
 
@@ -120,12 +550,12 @@ def train_models(df):
 
 def project_by_year(df, year, regressor, classifier, district_encoder, class_encoder, features):
     base = df.groupby("Distrito").agg({
-        "Ingreso_Laboral":"mean",
-        "Gasto_Alimentos":"mean",
-        "Inflacion_Alimentaria":"mean",
-        "Integrantes_Hogar":"mean",
-        "Porcentaje_Gasto_Alimentos":"mean",
-        "Indice_Vulnerabilidad":"mean",
+        "Ingreso_Laboral": "mean",
+        "Gasto_Alimentos": "mean",
+        "Inflacion_Alimentaria": "mean",
+        "Integrantes_Hogar": "mean",
+        "Porcentaje_Gasto_Alimentos": "mean",
+        "Indice_Vulnerabilidad": "mean",
     }).reset_index()
 
     years_forward = year - 2025
@@ -137,7 +567,11 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
     base["Ingreso_Laboral"] = base["Ingreso_Laboral"] * (1 + 0.020 * years_forward) * (1 + ((district_code % 5) - 2) * 0.004)
     base["Gasto_Alimentos"] = base["Gasto_Alimentos"] * (1 + 0.024 * years_forward) * pressure
     base["Porcentaje_Gasto_Alimentos"] = (base["Gasto_Alimentos"] / base["Ingreso_Laboral"]).clip(0.08, 0.85)
-    base["Indice_Vulnerabilidad"] = (base["Indice_Vulnerabilidad"] * (1 + 0.006 * years_forward) + base["Inflacion_Alimentaria"] * 0.25 + base["Porcentaje_Gasto_Alimentos"] * 2.5).clip(0, 100)
+    base["Indice_Vulnerabilidad"] = (
+        base["Indice_Vulnerabilidad"] * (1 + 0.006 * years_forward) +
+        base["Inflacion_Alimentaria"] * 0.25 +
+        base["Porcentaje_Gasto_Alimentos"] * 2.5
+    ).clip(0, 100)
 
     model_data = base.copy()
     model_data["Distrito_Cod"] = district_encoder.transform(model_data["Distrito"].astype(str))
@@ -161,9 +595,8 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
     base = calcular_iria(base)
 
     clf_codes = classifier.predict(X_future)
-    base["Nivel RF Classifier"] = class_encoder.inverse_transform(clf_codes)
-    base["Nivel de Riesgo"] = base["Nivel RF Classifier"]
-    base["Nivel IRIA"] = base["IRIA"].apply(clasificar_riesgo_iria)
+    base["Nivel de Riesgo"] = class_encoder.inverse_transform(clf_codes)
+
     base["Interpretación"] = base["Nivel de Riesgo"].apply(interpretacion)
 
     base = base.sort_values("Probabilidad", ascending=False).reset_index(drop=True)
@@ -186,13 +619,18 @@ def make_pdf(year, top_high, top_low, table):
         Paragraph("Predicción y Clasificación de Inseguridad Alimentaria", styles["Title"]),
         Spacer(1, 12),
         Paragraph(f"Año de predicción: {year}", styles["Heading2"]),
-        Paragraph(f"Distrito con mayor riesgo: {top_high['Distrito']} - {top_high['Probabilidad']:.2f}%", styles["Normal"]),
-        Paragraph(f"Distrito con menor riesgo: {top_low['Distrito']} - {top_low['Probabilidad']:.2f}%", styles["Normal"]),
+        Paragraph(
+            f"Distrito con mayor riesgo: {top_high['Distrito']} - {top_high['Probabilidad']:.2f}%",
+            styles["Normal"]
+        ),
+        Paragraph(
+            f"Distrito con menor riesgo: {top_low['Distrito']} - {top_low['Probabilidad']:.2f}%",
+            styles["Normal"]
+        ),
         Spacer(1, 12)
     ]
-    ranking = table[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Nivel IRIA", "Interpretación"]].copy()
+    ranking = table[["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]].copy()
     ranking["Probabilidad"] = ranking["Probabilidad"].round(2)
-    ranking["IRIA"] = ranking["IRIA"].round(2)
     pdf_table = Table([ranking.columns.tolist()] + ranking.values.tolist())
     pdf_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#00492F")),
@@ -204,22 +642,20 @@ def make_pdf(year, top_high, top_low, table):
     doc.build(elements)
     return output.getvalue()
 
+# Cargar datos y entrenar modelos
 df = load_data()
 regressor, classifier, district_encoder, class_encoder, features, metrics = train_models(df)
 
+# Sidebar
 st.sidebar.markdown("""
 <div class="sidebar-title">INSEGURIDAD<br>ALIMENTARIA</div>
 <div class="sidebar-subtitle">LIMA METROPOLITANA</div>
 <div class="side-item-active">Inicio</div>
-<div class="side-item">Predicción</div>
-<div class="side-item">Clasificación</div>
-<div class="side-item">Resultados</div>
 <div class="side-divider"></div>
-<div class="side-item">Exportar Ranking (Excel)</div>
-<div class="side-item">Exportar PDF</div>
 <div class="side-footer">Proyecto de Ciencia de Datos<br>Inseguridad Alimentaria en<br>Lima Metropolitana<br><br>© 2025</div>
 """, unsafe_allow_html=True)
 
+# Header
 header_left, header_right = st.columns([2.15, 1])
 with header_left:
     st.markdown("""
@@ -228,6 +664,7 @@ with header_left:
     <div class="location">Lima Metropolitana</div>
     """, unsafe_allow_html=True)
 
+# Control Panel
 st.markdown('<div class="control-panel">', unsafe_allow_html=True)
 c1, c2, c3, c4 = st.columns([1.05, 1.25, 1.15, 1.35])
 
@@ -239,11 +676,19 @@ results = project_by_year(df, year, regressor, classifier, district_encoder, cla
 
 with c2:
     st.markdown('<div class="label">SELECCIONAR DISTRITO</div>', unsafe_allow_html=True)
-    district_selected = st.selectbox("", ["Todos los distritos"] + sorted(results["Distrito"].unique()), label_visibility="collapsed")
+    district_selected = st.selectbox(
+        "",
+        ["Todos los distritos"] + sorted(results["Distrito"].unique()),
+        label_visibility="collapsed"
+    )
 
 with c3:
     st.markdown('<div class="label">MOSTRAR SOLO RIESGO</div>', unsafe_allow_html=True)
-    risk_filter = st.selectbox("", ["Todos los niveles", "Muy Alto", "Alto", "Medio", "Bajo"], label_visibility="collapsed")
+    risk_filter = st.selectbox(
+        "",
+        ["Todos los niveles", "Muy Alto", "Alto", "Medio", "Bajo"],
+        label_visibility="collapsed"
+    )
 
 with c4:
     st.markdown('<div class="label">BUSCAR DISTRITO</div>', unsafe_allow_html=True)
@@ -251,6 +696,7 @@ with c4:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Filtrar datos
 filtered = results.copy()
 if district_selected != "Todos los distritos":
     filtered = filtered[filtered["Distrito"] == district_selected]
@@ -263,8 +709,9 @@ top_high = results.iloc[0]
 top_low = results.iloc[-1]
 counts = results["Nivel de Riesgo"].value_counts()
 
+# Export buttons
 with header_right:
-    export_cols = ["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Nivel IRIA", "Interpretación"]
+    export_cols = ["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]
     st.download_button(
         "EXPORTAR RANKING (EXCEL)",
         data=make_excel(results[export_cols]),
@@ -280,17 +727,42 @@ with header_right:
             mime="application/pdf"
         )
 
+# KPI Cards
+st.markdown("<br>", unsafe_allow_html=True)
 k1, k2, k3, k4 = st.columns(4)
 with k1:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo muy alto</div><div class="kpi-number">{int(counts.get("Muy Alto", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="kpi-card"><div class="kpi-title">Riesgo muy alto</div>'
+        f'<div class="kpi-number">{int(counts.get("Muy Alto", 0))}</div>'
+        f'<div class="kpi-sub">Distritos</div></div>',
+        unsafe_allow_html=True
+    )
 with k2:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo alto</div><div class="kpi-number">{int(counts.get("Alto", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="kpi-card"><div class="kpi-title">Riesgo alto</div>'
+        f'<div class="kpi-number">{int(counts.get("Alto", 0))}</div>'
+        f'<div class="kpi-sub">Distritos</div></div>',
+        unsafe_allow_html=True
+    )
 with k3:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo medio</div><div class="kpi-number">{int(counts.get("Medio", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="kpi-card"><div class="kpi-title">Riesgo medio</div>'
+        f'<div class="kpi-number">{int(counts.get("Medio", 0))}</div>'
+        f'<div class="kpi-sub">Distritos</div></div>',
+        unsafe_allow_html=True
+    )
 with k4:
-    st.markdown(f'<div class="kpi-card"><div class="kpi-title">Riesgo bajo</div><div class="kpi-number">{int(counts.get("Bajo", 0))}</div><div class="kpi-sub">Random Forest Classifier</div></div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="kpi-card"><div class="kpi-title">Riesgo bajo</div>'
+        f'<div class="kpi-number">{int(counts.get("Bajo", 0))}</div>'
+        f'<div class="kpi-sub">Distritos</div></div>',
+        unsafe_allow_html=True
+    )
 
+# Result Cards
+st.markdown("<br>", unsafe_allow_html=True)
 r1, r2, r3 = st.columns([1, .9, 1.2])
+
 with r1:
     st.markdown(f"""
     <div class="result-card">
@@ -300,7 +772,7 @@ with r1:
             <div class="pred-district">{top_high["Distrito"]}</div>
             <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
             <div class="pred-value">{top_high["Probabilidad"]:.1f} %</div>
-            <div class="pred-label">IRIA: {top_high["IRIA"]:.1f} | Clasificación ML: {top_high["Nivel de Riesgo"]}</div>
+            <div class="pred-label">Nivel de Riesgo: {top_high["Nivel de Riesgo"]}</div>
             <div class="progress"><div class="progress-fill" style="width:{top_high["Probabilidad"]:.0f}%;"></div></div>
         </div>
     </div>
@@ -315,7 +787,7 @@ with r2:
             <div class="low-district">{top_low["Distrito"]}</div>
             <div class="pred-label">Probabilidad estimada de inseguridad alimentaria</div>
             <div class="low-value">{top_low["Probabilidad"]:.1f} %</div>
-            <div class="pred-label">IRIA: {top_low["IRIA"]:.1f} | Clasificación ML: {top_low["Nivel de Riesgo"]}</div>
+            <div class="pred-label">Nivel de Riesgo: {top_low["Nivel de Riesgo"]}</div>
             <div class="progress"><div class="progress-fill-red" style="width:{top_low["Probabilidad"]:.0f}%;"></div></div>
         </div>
     </div>
@@ -326,40 +798,45 @@ with r3:
     <div class="result-card">
         <div class="card-title">MODELOS UTILIZADOS</div>
         <div class="prediction-box">
-            <div class="pred-label">Predicción</div>
-            <div class="pred-district">Random Forest Regressor</div>
-            <div class="pred-label">Clasificación</div>
-            <div class="pred-district">Random Forest Classifier</div>
-            <div class="pred-label">IRIA como índice interpretativo</div>
+            <div class="pred-label">Predicción de Probabilidad</div>
+            <div class="pred-district" style="font-size: 1.3rem;">Random Forest Regressor</div>
+            <br>
+            <div class="pred-label">Clasificación de Riesgo</div>
+            <div class="pred-district" style="font-size: 1.3rem;">Random Forest Classifier</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
+# Table
 st.markdown('<div class="table-card">', unsafe_allow_html=True)
-st.markdown(f'<div class="table-title">TABLA DE TODOS LOS DISTRITOS - PROBABILIDAD, IRIA Y CLASIFICACIÓN ML ({year})</div>', unsafe_allow_html=True)
+st.markdown(
+    f'<div class="table-title">RANKING DE DISTRITOS - PROBABILIDAD Y NIVEL DE RIESGO ({year})</div>',
+    unsafe_allow_html=True
+)
 
-table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Nivel IRIA", "Interpretación"]].copy()
-table_show["Probabilidad"] = table_show["Probabilidad"].round(1)
-table_show["IRIA"] = table_show["IRIA"].round(1)
+table_show = filtered[["#", "Distrito", "Probabilidad", "Nivel de Riesgo", "Interpretación"]].copy()
+table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
 table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
-table_show["Nivel IRIA"] = table_show["Nivel IRIA"].apply(styled_badge)
 
 st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Explanation
 st.markdown(f"""
 <div class="explanation">
-<b>Interpretación automática:</b><br>
+<b>Interpretación de resultados:</b><br>
 Para el año <b>{year}</b>, el distrito con mayor probabilidad estimada de presentar inseguridad alimentaria es
-<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b>.
-La clasificación principal se obtiene con un <b>Random Forest Classifier</b>, mientras que el <b>IRIA</b> se utiliza como índice interpretativo.
-El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
-El modelo de clasificación asigna <b>{int(counts.get("Muy Alto", 0))}</b> distritos en riesgo muy alto,
+<b>{top_high["Distrito"]}</b>, con <b>{top_high["Probabilidad"]:.1f}%</b> de probabilidad. 
+El modelo clasifica <b>{int(counts.get("Muy Alto", 0))}</b> distritos en riesgo muy alto,
 <b>{int(counts.get("Alto", 0))}</b> en riesgo alto,
 <b>{int(counts.get("Medio", 0))}</b> en riesgo medio y
 <b>{int(counts.get("Bajo", 0))}</b> en riesgo bajo.
+El distrito con menor probabilidad es <b>{top_low["Distrito"]}</b>, con <b>{top_low["Probabilidad"]:.1f}%</b>.
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>', unsafe_allow_html=True)
-
+# Footer
+st.markdown(
+    '<div class="footer">Proyecto de Ciencia de Datos - Inseguridad Alimentaria en Lima Metropolitana © 2025</div>',
+    unsafe_allow_html=True
+)
