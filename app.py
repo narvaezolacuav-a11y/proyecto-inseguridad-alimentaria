@@ -575,8 +575,6 @@ def train_models(df):
     }
     return regressor, classifier, district_encoder, class_encoder, features, metrics
 
-classifier.fit(X_train, y_train)  # Esta es una línea de ejemplo
-plot_feature_importance(classifier, features)
 
 def project_by_year(df, year, regressor, classifier, district_encoder, class_encoder, features):
     base = df.groupby("Distrito").agg({
@@ -631,9 +629,6 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
     base.insert(0, "#", range(1, len(base) + 1))
     return base
 
-
-results['Nivel de Riesgo'] = results['Probabilidad'].apply(categorize_risk)  # Asegúrate de categorizar el riesgo
-plot_choropleth(results, year)
 
 def make_excel(df):
     output = BytesIO()
