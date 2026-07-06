@@ -547,6 +547,7 @@ def train_models(df):
     ]
 
     y_reg = work["Probabilidad_Enfermedad_Alimentaria"]
+    
 
     # Calcular IRIA y clasificación
     work = calcular_iria(work.copy())
@@ -573,6 +574,9 @@ def train_models(df):
         "Accuracy": accuracy_score(yte_c, classifier.predict(Xte_c))
     }
     return regressor, classifier, district_encoder, class_encoder, features, metrics
+
+classifier.fit(X_train, y_train)  # Esta es una línea de ejemplo
+plot_feature_importance(classifier, features)
 
 def project_by_year(df, year, regressor, classifier, district_encoder, class_encoder, features):
     base = df.groupby("Distrito").agg({
@@ -626,6 +630,10 @@ def project_by_year(df, year, regressor, classifier, district_encoder, class_enc
     base = base.sort_values("Probabilidad", ascending=False).reset_index(drop=True)
     base.insert(0, "#", range(1, len(base) + 1))
     return base
+
+
+results['Nivel de Riesgo'] = results['Probabilidad'].apply(categorize_risk)  # Asegúrate de categorizar el riesgo
+plot_choropleth(results, year)
 
 def make_excel(df):
     output = BytesIO()
@@ -838,7 +846,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-table_show = filtered[["#", "Distrito", "Probabilidad", "IRIA", "Nivel de Riesgo", "Interpretación"]].copy()
+table_show = filtered[["#", "Distrito", "Probabilidad","Nivel de Riesgo", "Interpretación"]].copy()
 table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
 table_show["IRIA"] = table_show["IRIA"].apply(lambda x: f"{x:.1f}")
 table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
