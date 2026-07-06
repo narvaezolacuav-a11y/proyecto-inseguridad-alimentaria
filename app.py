@@ -843,7 +843,6 @@ st.markdown(
 
 table_show = filtered[["#", "Distrito", "Probabilidad","Nivel de Riesgo", "Interpretación"]].copy()
 table_show["Probabilidad"] = table_show["Probabilidad"].apply(lambda x: f"{x:.1f}%")
-table_show["IRIA"] = table_show["IRIA"].apply(lambda x: f"{x:.1f}")
 table_show["Nivel de Riesgo"] = table_show["Nivel de Riesgo"].apply(styled_badge)
 
 st.markdown(table_show.to_html(escape=False, index=False), unsafe_allow_html=True)
