@@ -9,7 +9,7 @@ from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import Rectangle
-import seaborn as sns
+
 
 try:
     from reportlab.lib import colors
